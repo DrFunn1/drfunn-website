@@ -155,8 +155,8 @@ header {
 #contact-form label {
   font-family: inherit;
   font-weight: 700;
-  color: #1a237e; /* Navy blue for high contrast on light blue */
-  margin-bottom: -10px; /* Pulls label closer to its input */
+  color: #FFFF00; /* Yellow for high contrast against modal dark translucent */
+  margin-bottom: -5 px; /* Pulls label closer to its input */
 }
 
 /* Unified Input & Textarea */
