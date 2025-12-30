@@ -1,0 +1,9 @@
+@"
+tunnel: 34eafc01-073b-49e2-9d79-df6db99b50a4
+credentials-file: C:\Users\twizzle\.cloudflared\34eafc01-073b-49e2-9d79-df6db99b50a4.json
+
+ingress:
+  - hostname: plex.drfunn.com
+    service: http://192.168.1.252:34000
+  - service: http_status:404
+"@ | Out-File -Encoding ascii C:\Users\twizzle\.cloudflared\config.yml

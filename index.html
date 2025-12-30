@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DrFunn - Interactive Website Project Portfolio</title>
+  
+<!-- Open Graph Meta Tags for Link Previews -->
+  <meta property="og:title" content="DrFunn.com - Interactive Website Project Portfolio">
+  <meta property="og:description" content="Software Playground">
+  <meta property="og:image" content="https://drfunn.com/assets/images/drfunn-banner.webp">
+  <meta property="og:url" content="https://drfunn.com">
+  <meta property="og:type" content="website">
+  
+  <!-- Twitter Card Meta Tags (optional but recommended) -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="DrFunn.com - Interactive Website Project Portfolio">
+  <meta name="twitter:description" content="Software Playground">
+  <meta name="twitter:image" content="https://drfunn.com/assets/images/drfunn-banner.webp">
+  
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="icon" href="assets/images/drfunn-favicon.png" type="image/png">
+
+  
+</head>
+<body>
+  
+  <!-- Main Content -->
+  <header id="projects">
+    <img src="assets/images/drfunn-banner.webp" alt="DrFunn.com Banner" class="banner">
+    <h2 class="home-headline">Interactive Website Playground</h2>
+  </header>
+
+  <main class="content-section">
+    <h2 class="section-title">Featured Projects</h2>
+    
+    <div class="project-grid">
+      <a href="projects/dryer/dryer.html" class="project-card">
+        <img src="assets/images/dryer-card.webp" alt="Dryer">
+        <div class="project-info">
+          <p>Dryer</p>
+        </div>
+      </a>
+      
+    </div>
+  </main>
+
+  <!-- Dynamic Footer -->
+  <div id="footer-placeholder"></div>
+
+  <script>
+    fetch('./footer-home.html')
+      .then(response => response.text())
+      .then(data => {
+        document.getElementById('footer-placeholder').innerHTML = data;
+        
+        // Initialize contact modal and form after footer loads
+        const contactButton = document.getElementById('contact-button');
+        const modal = document.getElementById('contact-modal');
+        const closeButton = document.getElementById('close-modal');
+        const form = document.getElementById('contact-form');
+        const formStatus = document.getElementById('form-status');
+        
+        if (contactButton && modal && closeButton && form) {
+          // Open modal when contact button is clicked
+          contactButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            modal.style.display = 'flex';
+          });
+          
+          // Close modal when X is clicked
+          closeButton.addEventListener('click', function() {
+            modal.style.display = 'none';
+            form.reset();
+            formStatus.style.display = 'none';
+          });
+          
+          // Close modal when clicking outside the form
+          modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+              modal.style.display = 'none';
+              form.reset();
+              formStatus.style.display = 'none';
+            }
+          });
+          
+          // Close modal on Escape key
+          document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+              modal.style.display = 'none';
+              form.reset();
+              formStatus.style.display = 'none';
+            }
+          });
+          
+          // Handle form submission with AJAX
+          form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const submitButton = form.querySelector('button[type="submit"]');
+            
+            // Disable submit button and show loading state
+            submitButton.disabled = true;
+            submitButton.textContent = 'Sending...';
+            formStatus.style.display = 'none';
+            
+            fetch(form.action, {
+              method: 'POST',
+              body: formData,
+              headers: {
+                'Accept': 'application/json'
+              }
+            })
+            .then(response => {
+              if (response.ok) {
+                // Success
+                formStatus.style.display = 'block';
+                formStatus.style.backgroundColor = '#d4edda';
+                formStatus.style.color = '#155724';
+                formStatus.textContent = 'Thank you! Your message has been sent successfully.';
+                form.reset();
+                
+                // Close modal after 2 seconds
+                setTimeout(function() {
+                  modal.style.display = 'none';
+                  formStatus.style.display = 'none';
+                }, 2000);
+              } else {
+                throw new Error('Form submission failed');
+              }
+            })
+            .catch(error => {
+              // Error
+              formStatus.style.display = 'block';
+              formStatus.style.backgroundColor = '#f8d7da';
+              formStatus.style.color = '#721c24';
+              formStatus.textContent = 'Oops! There was a problem sending your message. Please try again.';
+            })
+            .finally(() => {
+              // Re-enable submit button
+              submitButton.disabled = false;
+              submitButton.textContent = 'Send Message';
+            });
+          });
+        }
+      })
+      .catch(error => {
+        console.error('Error loading footer:', error);
+      });
+  </script>
+</body>
+</html>
+
