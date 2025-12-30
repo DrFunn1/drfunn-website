@@ -108,11 +108,11 @@ class DryerPhysics {
         this.drumAngle += this.drumAngularVelocity * dt;
         
         // Transform to rotating reference frame
-        const cos = Math.cos(-this.drumAngle);
-        const sin = Math.sin(-this.drumAngle);
+        const cos = Math.cos(this.drumAngle);
+        const sin = Math.sin(this.drumAngle);
         
-        // Apply gravity in rotating frame
-        const gravityX = this.gravity * sin;
+        // Apply gravity in rotating frame (gravity is always pointing down in world frame)
+        const gravityX = -this.gravity * sin;
         const gravityY = -this.gravity * cos;
         
         // Apply centrifugal force
