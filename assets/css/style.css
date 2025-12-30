@@ -137,25 +137,19 @@ header {
   z-index: 1000;
 }
 
-/* Modal Content Box */
+/* Modal Content Box - Rounded with Light Blue Background */
 .modal-content {
-  background: white;
-  padding: 30px;
-  border-radius: 12px;
+  background-color: rgba(235, 245, 255, 0.95); /* Light blue opaque background */
+  padding: 40px;
+  border-radius: 24px; /* More pronounced rounding */
   width: 90%;
   max-width: 500px;
   position: relative;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Subtle glass-like border */
 }
 
-#close-modal {
-  position: absolute;
-  top: 10px; right: 15px;
-  font-size: 24px;
-  cursor: pointer;
-  color: #888;
-}
-
-/* Form Styling */
+/* Form Layout */
 #contact-form {
   display: flex;
   flex-direction: column;
@@ -163,27 +157,48 @@ header {
   text-align: left;
 }
 
+/* Form Fields - Unified Font and Style */
 #contact-form input, 
 #contact-form textarea {
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  font-family: inherit; /* Fixes the inconsistent message field font */
+  font-size: 1rem;
+  padding: 12px;
+  border: 1px solid #ced4da;
+  border-radius: 12px; /* Matching rounded corners for fields */
   width: 100%;
+  background: white;
 }
 
+/* Specific height for message box */
+#contact-form textarea {
+  min-height: 120px;
+  resize: vertical; /* Allows user to expand height but not width */
+}
+
+/* Close Button Styling */
+#close-modal {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 28px;
+  cursor: pointer;
+  color: #666;
+  line-height: 1;
+}
+
+/* Submit Button */
 #contact-form button {
-  padding: 12px;
-  background: #28a745;
+  padding: 14px;
+  background: #007bff;
   color: white;
   border: none;
-  border-radius: 4px;
+  border-radius: 12px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 1rem;
+  transition: background 0.2s;
 }
 
-#form-status {
-  margin-top: 15px;
-  padding: 10px;
-  border-radius: 4px;
-  display: none;
+#contact-form button:hover {
+  background: #0056b3;
 }
