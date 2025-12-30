@@ -15,6 +15,26 @@ body {
   max-height: 50vh; /* Limits height to half the screen height */
 }
 
+/* Tablet and Mobile Styles */
+@media (max-width: 768px) {
+  .banner {
+    /* Set the background to your headshot */
+    content: url("../images/drfunn-transparent-200x200.png");
+    
+    /* Adjust size for a headshot look */
+    width: 200px;
+    height: 200px;
+    margin: 20px auto; /* Centers the headshot */
+    border-radius: 50%; /* Optional: makes the square image a circle */
+    object-fit: contain;
+  }
+
+  .home-headline {
+    font-size: 1.2rem;
+    padding: 0 10px;
+  }
+}
+
 header {
   text-align: center;
   padding-bottom: 2rem;
