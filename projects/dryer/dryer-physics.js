@@ -60,6 +60,9 @@ class DryerPhysics {
         this.drumAngle = 0; // current rotation angle (radians)
         this.drumAngularVelocity = 0; // ω (rad/s)
         
+        // Visual debug: offset for segment highlighting (adjust if needed)
+        this.segmentIndexOffset = 0; // Change this to fix visual mismatch
+        
         // Enable/disable physics effects for debugging
         this.enableCoriolis = true; // DEFAULT ON - fixes "wind" effect!
         this.enableCentrifugal = true;
@@ -283,28 +286,34 @@ class DryerPhysics {
             const vn = this.ball.vx * nx + this.ball.vy * ny;
             
             if (vn < 0) { // Moving into wall
-                // Reflect velocity with restitution
+                // IMPORTANT: Calculate which segment BEFORE moving ball back
+                // Otherwise ball gets pushed into adjacent segment at boundaries
+                const ballAngle = Math.atan2(this.ball.y, this.ball.x);
+                const anglePerSegment = (2 * Math.PI) / this.vaneCount;
+                
+                // Normalize angle to [0, 2π)
+                let normalizedAngle = ballAngle;
+                if (normalizedAngle < 0) normalizedAngle += 2 * Math.PI;
+                
+                // Calculate segment index using floor (standard binning)
+                let segmentIndex = Math.floor(normalizedAngle / anglePerSegment) % this.vaneCount;
+                
+                // Now reflect velocity with restitution
                 this.ball.vx -= (1 + this.ball.restitution) * vn * nx;
                 this.ball.vy -= (1 + this.ball.restitution) * vn * ny;
                 
-                // Determine which drum segment was hit
-                // The ball angle in the rotating reference frame
-                let ballAngle = Math.atan2(this.ball.y, this.ball.x);
+                // Apply offset if visual doesn't match physics
+                segmentIndex = (segmentIndex + this.segmentIndexOffset) % this.vaneCount;
+                if (segmentIndex < 0) segmentIndex += this.vaneCount;
                 
-                // Map to segment index (0 to vaneCount-1)
-                // Segments are defined by vanes, so segment i is between vane i and vane i+1
-                const anglePerSegment = (2 * Math.PI) / this.vaneCount;
-                
-                // Adjust for segment boundaries - add half segment to center on vane 0
-                let adjustedAngle = ballAngle + (anglePerSegment / 2);
-                
-                // Normalize to [0, 2π)
-                if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
-                
-                const segmentIndex = Math.floor(adjustedAngle / anglePerSegment) % this.vaneCount;
-                
+                // Find the surface object
                 const surface = this.surfaces.find(s => s.type === 'drum' && s.index === segmentIndex);
+                
                 if (surface) {
+                    // Debug logging (temporary - can remove later)
+                    if (window.dryerDebugMode) {
+                        console.log(`🎯 Drum collision: angle=${(normalizedAngle*180/Math.PI).toFixed(2)}° → segment ${segmentIndex} (before offset: ${Math.floor(normalizedAngle / anglePerSegment)}) → ID: ${surface.id}`);
+                    }
                     this.triggerCollision(surface, Math.abs(vn));
                 }
             }
@@ -665,12 +674,53 @@ QUICK COMMANDS (copy/paste into console):
     
     // Debug collision highlighting
     debugCollisions: function() {
-        const originalTrigger = this.physics.triggerCollision.bind(this.physics);
-        this.physics.triggerCollision = function(surface, velocity) {
-            console.log(`💥 Collision: ${surface.type} #${surface.index} (${surface.id}) - velocity: ${velocity.toFixed(3)} m/s`);
-            originalTrigger(surface, velocity);
-        };
-        console.log('🔍 Collision debugging enabled - watch console for hits');
+        window.dryerDebugMode = !window.dryerDebugMode;
+        console.log(`🔍 Collision logging: ${window.dryerDebugMode ? 'ON' : 'OFF'}`);
+        if (window.dryerDebugMode) {
+            console.log('Watch for: 🎯 messages showing segment calculations');
+        }
+        return window.dryerDebugMode;
+    },
+    
+    // Show where ball currently is
+    whereBall: function() {
+        const p = this.physics;
+        const ballAngle = Math.atan2(p.ball.y, p.ball.x);
+        const angleDeg = (ballAngle * 180 / Math.PI).toFixed(1);
+        const normalizedAngle = ballAngle < 0 ? ballAngle + 2*Math.PI : ballAngle;
+        const normalizedDeg = (normalizedAngle * 180 / Math.PI).toFixed(1);
+        const anglePerSegment = (2 * Math.PI) / p.vaneCount;
+        const segmentIndex = Math.floor(normalizedAngle / anglePerSegment) % p.vaneCount;
+        const drumAngleDeg = (p.drumAngle * 180 / Math.PI).toFixed(1);
+        const worldAngleDeg = ((normalizedAngle + p.drumAngle) * 180 / Math.PI).toFixed(1);
+        
+        console.log('=== BALL POSITION ===');
+        console.log(`Rotating frame: ${normalizedDeg}° (segment ${segmentIndex})`);
+        console.log(`World frame: ${worldAngleDeg}° (drum rotated ${drumAngleDeg}°)`);
+        console.log(`Ball coords: (${p.ball.x.toFixed(3)}, ${p.ball.y.toFixed(3)})`);
+        console.log(`Distance from center: ${Math.sqrt(p.ball.x**2 + p.ball.y**2).toFixed(3)}m`);
+        console.log(`Drum radius: ${p.drumRadius}m`);
+        console.log('====================');
+        
+        // Show which segment SHOULD be highlighted
+        const surface = p.surfaces.find(s => s.type === 'drum' && s.index === segmentIndex);
+        if (surface) {
+            console.log(`Should highlight: ${surface.id}`);
+        }
+    },
+    
+    // Adjust segment offset to fix visual mismatch
+    fixSegmentOffset: function(offset) {
+        if (offset === undefined) {
+            console.log(`Current segment offset: ${this.physics.segmentIndexOffset}`);
+            console.log('Usage: dryerDebug.fixSegmentOffset(+1) or dryerDebug.fixSegmentOffset(-1)');
+            console.log('Try adjusting by ±1 until visual matches collision');
+            return this.physics.segmentIndexOffset;
+        }
+        this.physics.segmentIndexOffset = offset;
+        console.log(`✅ Segment offset set to: ${offset}`);
+        console.log('Watch collisions to see if this fixes the visual mismatch');
+        return offset;
     }
 };
 
