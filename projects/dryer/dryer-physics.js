@@ -61,7 +61,7 @@ class DryerPhysics {
         this.drumAngularVelocity = 0; // ω (rad/s)
         
         // Enable/disable physics effects for debugging
-        this.enableCoriolis = false; // START WITH FALSE - toggle to test
+        this.enableCoriolis = true; // DEFAULT ON - fixes "wind" effect!
         this.enableCentrifugal = true;
         this.enableAirDrag = true;
         this.coriolisSignFlip = 1; // +1 or -1 to flip Coriolis direction
@@ -288,8 +288,20 @@ class DryerPhysics {
                 this.ball.vy -= (1 + this.ball.restitution) * vn * ny;
                 
                 // Determine which drum segment was hit
-                const ballAngle = Math.atan2(this.ball.y, this.ball.x);
-                const segmentIndex = Math.floor(((ballAngle + Math.PI) / (2 * Math.PI)) * this.vaneCount) % this.vaneCount;
+                // The ball angle in the rotating reference frame
+                let ballAngle = Math.atan2(this.ball.y, this.ball.x);
+                
+                // Map to segment index (0 to vaneCount-1)
+                // Segments are defined by vanes, so segment i is between vane i and vane i+1
+                const anglePerSegment = (2 * Math.PI) / this.vaneCount;
+                
+                // Adjust for segment boundaries - add half segment to center on vane 0
+                let adjustedAngle = ballAngle + (anglePerSegment / 2);
+                
+                // Normalize to [0, 2π)
+                if (adjustedAngle < 0) adjustedAngle += 2 * Math.PI;
+                
+                const segmentIndex = Math.floor(adjustedAngle / anglePerSegment) % this.vaneCount;
                 
                 const surface = this.surfaces.find(s => s.type === 'drum' && s.index === segmentIndex);
                 if (surface) {
@@ -649,6 +661,16 @@ QUICK COMMANDS (copy/paste into console):
         this.setBall(0.020, 0.0027);
         this.physics.ball.dragCoeff = 0.47;
         console.log('🏓 Ping pong ball');
+    },
+    
+    // Debug collision highlighting
+    debugCollisions: function() {
+        const originalTrigger = this.physics.triggerCollision.bind(this.physics);
+        this.physics.triggerCollision = function(surface, velocity) {
+            console.log(`💥 Collision: ${surface.type} #${surface.index} (${surface.id}) - velocity: ${velocity.toFixed(3)} m/s`);
+            originalTrigger(surface, velocity);
+        };
+        console.log('🔍 Collision debugging enabled - watch console for hits');
     }
 };
 
