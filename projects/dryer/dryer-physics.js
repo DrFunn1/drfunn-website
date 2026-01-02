@@ -53,14 +53,18 @@ class DryerPhysics {
         this.gravity = 9.81; // m/s² - Earth's gravitational acceleration
         this.airDensity = 1.225; // kg/m³ at sea level, 20°C
         
+        // Drag model selection
+        this.useQuadraticDrag = false; // Set to false for original linear drag
+        
         // Drum rotation
         this.drumAngle = 0; // current rotation angle (radians)
         this.drumAngularVelocity = 0; // ω (rad/s)
         
         // Enable/disable physics effects for debugging
-        this.enableCoriolis = true;
+        this.enableCoriolis = false; // START WITH FALSE - toggle to test
         this.enableCentrifugal = true;
         this.enableAirDrag = true;
+        this.coriolisSignFlip = 1; // +1 or -1 to flip Coriolis direction
         
         // Surface tracking for MIDI
         this.surfaces = [];
@@ -186,23 +190,23 @@ class DryerPhysics {
         
         // 3. CORIOLIS FORCE (fictitious force in rotating frame) - THIS WAS MISSING!
         // F_coriolis = -2m(ω × v)
-        // In 2D: F_x = -2*m*ω*v_y, F_y = 2*m*ω*v_x
+        // In 2D: F_x = 2*m*ω*v_y, F_y = -2*m*ω*v_x (sign depends on rotation direction)
         // This deflects moving objects perpendicular to their motion
         let coriolisX = 0;
         let coriolisY = 0;
         
         if (this.enableCoriolis) {
             // Note: We don't multiply by mass here since we're calculating acceleration (F/m)
-            coriolisX = -2 * this.drumAngularVelocity * this.ball.vy;
-            coriolisY = 2 * this.drumAngularVelocity * this.ball.vx;
+            // Sign convention: positive ω is counter-clockwise rotation
+            const sign = this.coriolisSignFlip || 1;
+            coriolisX = sign * 2 * this.drumAngularVelocity * this.ball.vy;
+            coriolisY = sign * -2 * this.drumAngularVelocity * this.ball.vx;
             
             const coriolisMag = Math.sqrt(coriolisX * coriolisX + coriolisY * coriolisY);
             this.debugInfo.coriolisMagnitude = coriolisMag;
         }
         
-        // 4. AIR DRAG FORCE (quadratic drag model)
-        // F_drag = 0.5 * ρ * v² * C_d * A
-        // Direction: opposite to velocity
+        // 4. AIR DRAG FORCE
         let dragX = 0;
         let dragY = 0;
         
@@ -210,17 +214,25 @@ class DryerPhysics {
             const speed = Math.sqrt(this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy);
             
             if (speed > 0.001) {
-                // Quadratic drag force magnitude
-                const dragForceMagnitude = 0.5 * this.airDensity * speed * speed * 
-                                          this.ball.dragCoeff * this.ball.area;
-                
-                // Drag acceleration (F/m) opposing velocity
-                const dragAccelMagnitude = dragForceMagnitude / this.ball.mass;
-                
-                dragX = -(this.ball.vx / speed) * dragAccelMagnitude;
-                dragY = -(this.ball.vy / speed) * dragAccelMagnitude;
-                
-                this.debugInfo.dragMagnitude = dragAccelMagnitude;
+                if (this.useQuadraticDrag) {
+                    // Quadratic drag model: F_drag = 0.5 * ρ * v² * C_d * A
+                    const dragForceMagnitude = 0.5 * this.airDensity * speed * speed * 
+                                              this.ball.dragCoeff * this.ball.area;
+                    const dragAccelMagnitude = dragForceMagnitude / this.ball.mass;
+                    
+                    dragX = -(this.ball.vx / speed) * dragAccelMagnitude;
+                    dragY = -(this.ball.vy / speed) * dragAccelMagnitude;
+                    
+                    this.debugInfo.dragMagnitude = dragAccelMagnitude;
+                } else {
+                    // Original linear drag (simple damping)
+                    const dragCoeff = 0.1;
+                    const dampingFactor = Math.exp(-dragCoeff * dt);
+                    this.ball.vx *= dampingFactor;
+                    this.ball.vy *= dampingFactor;
+                    
+                    this.debugInfo.dragMagnitude = dragCoeff * speed;
+                }
             }
         }
         
@@ -228,8 +240,15 @@ class DryerPhysics {
         // APPLY ALL FORCES (as accelerations)
         // =====================================================================
         
-        const totalAccelX = gravityX + centrifugalX + coriolisX + dragX;
-        const totalAccelY = gravityY + centrifugalY + coriolisY + dragY;
+        let totalAccelX = gravityX + centrifugalX + coriolisX;
+        let totalAccelY = gravityY + centrifugalY + coriolisY;
+        
+        // Only add drag to acceleration if using quadratic model
+        // (linear drag is applied directly to velocity above)
+        if (this.useQuadraticDrag) {
+            totalAccelX += dragX;
+            totalAccelY += dragY;
+        }
         
         this.ball.vx += totalAccelX * dt;
         this.ball.vy += totalAccelY * dt;
@@ -422,4 +441,219 @@ class DryerPhysics {
             velocity: `(${this.ball.vx.toFixed(3)}, ${this.ball.vy.toFixed(3)})`
         };
     }
+    
+    // ===================================================================
+    // CONSOLE DEBUG HELPERS - Easy toggling of physics features
+    // ===================================================================
+    
+    toggleCoriolis(enable) {
+        this.enableCoriolis = enable !== undefined ? enable : !this.enableCoriolis;
+        console.log(`🌀 Coriolis force: ${this.enableCoriolis ? 'ENABLED' : 'DISABLED'}`);
+        return this.enableCoriolis;
+    }
+    
+    toggleCentrifugal(enable) {
+        this.enableCentrifugal = enable !== undefined ? enable : !this.enableCentrifugal;
+        console.log(`💫 Centrifugal force: ${this.enableCentrifugal ? 'ENABLED' : 'DISABLED'}`);
+        return this.enableCentrifugal;
+    }
+    
+    toggleDrag(enable) {
+        this.enableAirDrag = enable !== undefined ? enable : !this.enableAirDrag;
+        console.log(`💨 Air drag: ${this.enableAirDrag ? 'ENABLED' : 'DISABLED'}`);
+        return this.enableAirDrag;
+    }
+    
+    toggleQuadraticDrag(enable) {
+        this.useQuadraticDrag = enable !== undefined ? enable : !this.useQuadraticDrag;
+        console.log(`📐 Drag model: ${this.useQuadraticDrag ? 'QUADRATIC (realistic)' : 'LINEAR (original)'}`);
+        return this.useQuadraticDrag;
+    }
+    
+    flipCoriolisSign() {
+        this.coriolisSignFlip = (this.coriolisSignFlip || 1) * -1;
+        console.log(`🔄 Coriolis sign: ${this.coriolisSignFlip > 0 ? 'POSITIVE' : 'NEGATIVE'}`);
+        return this.coriolisSignFlip;
+    }
+    
+    showPhysicsState() {
+        console.log('=== PHYSICS STATE ===');
+        console.log(`🌀 Coriolis: ${this.enableCoriolis ? 'ON' : 'OFF'} (sign: ${(this.coriolisSignFlip || 1) > 0 ? '+' : '-'})`);
+        console.log(`💫 Centrifugal: ${this.enableCentrifugal ? 'ON' : 'OFF'}`);
+        console.log(`💨 Air drag: ${this.enableAirDrag ? 'ON' : 'OFF'} (${this.useQuadraticDrag ? 'quadratic' : 'linear'})`);
+        console.log(`⚙️  RPM: ${this.rpm}`);
+        console.log(`📏 Ball: ${(this.ball.radius * 100).toFixed(1)}cm, ${(this.ball.mass * 1000).toFixed(1)}g`);
+        console.log('====================');
+        const debug = this.getDebugInfo();
+        console.log(`Centrifugal: ${debug.centrifugalMagnitude.toFixed(2)} m/s²`);
+        console.log(`Coriolis: ${debug.coriolisMagnitude.toFixed(2)} m/s²`);
+        console.log(`Drag: ${debug.dragMagnitude.toFixed(2)} m/s²`);
+        console.log(`Velocity: ${debug.totalVelocity.toFixed(2)} m/s`);
+        return debug;
+    }
+    
+    // Quick presets
+    originalPhysics() {
+        this.enableCoriolis = false;
+        this.enableCentrifugal = true;
+        this.enableAirDrag = true;
+        this.useQuadraticDrag = false;
+        console.log('✅ Reverted to ORIGINAL physics (no Coriolis, linear drag)');
+        this.showPhysicsState();
+    }
+    
+    enhancedPhysics() {
+        this.enableCoriolis = true;
+        this.enableCentrifugal = true;
+        this.enableAirDrag = true;
+        this.useQuadraticDrag = true;
+        console.log('✅ Enabled ENHANCED physics (with Coriolis, quadratic drag)');
+        this.showPhysicsState();
+    }
+    
+    onlyGravity() {
+        this.enableCoriolis = false;
+        this.enableCentrifugal = false;
+        this.enableAirDrag = false;
+        console.log('✅ ONLY GRAVITY (all other forces disabled)');
+        this.showPhysicsState();
+    }
 }
+
+// ===================================================================
+// GLOBAL CONSOLE SHORTCUTS - For easy debugging
+// ===================================================================
+// These will be available in browser console as window.dryerDebug
+
+window.dryerDebug = {
+    help: function() {
+        console.log(`
+╔══════════════════════════════════════════════════════════════════╗
+║                   DRYER PHYSICS DEBUG CONSOLE                    ║
+╚══════════════════════════════════════════════════════════════════╝
+
+QUICK COMMANDS (copy/paste into console):
+─────────────────────────────────────────────────────────────────────
+
+📊 SHOW CURRENT STATE:
+   dryerDebug.show()
+
+🔄 TOGGLE INDIVIDUAL FORCES:
+   dryerDebug.coriolis()        - Toggle Coriolis force
+   dryerDebug.centrifugal()     - Toggle centrifugal force  
+   dryerDebug.drag()            - Toggle air drag
+   dryerDebug.quadDrag()        - Toggle quadratic vs linear drag
+   dryerDebug.flipCoriolis()    - Flip Coriolis sign (+/-)
+
+🎯 QUICK PRESETS:
+   dryerDebug.original()        - Original physics (baseline)
+   dryerDebug.enhanced()        - Enhanced physics (all features)
+   dryerDebug.gravityOnly()     - Only gravity (debug mode)
+
+🧪 ISOLATE FORCES (test one at a time):
+   dryerDebug.testCoriolis()    - ONLY Coriolis + Gravity
+   dryerDebug.testCentrifugal() - ONLY Centrifugal + Gravity
+
+📝 EXAMPLES:
+   dryerDebug.show()            // See what's currently enabled
+   dryerDebug.original()        // Start with baseline
+   dryerDebug.coriolis()        // Add Coriolis
+   dryerDebug.flipCoriolis()    // Reverse Coriolis direction
+   
+─────────────────────────────────────────────────────────────────────
+        `);
+    },
+    
+    // Access physics engine
+    get physics() {
+        return window.dryerApp?.physics;
+    },
+    
+    // Show state
+    show: function() {
+        return this.physics?.showPhysicsState();
+    },
+    
+    // Toggle individual forces
+    coriolis: function() {
+        return this.physics?.toggleCoriolis();
+    },
+    
+    centrifugal: function() {
+        return this.physics?.toggleCentrifugal();
+    },
+    
+    drag: function() {
+        return this.physics?.toggleDrag();
+    },
+    
+    quadDrag: function() {
+        return this.physics?.toggleQuadraticDrag();
+    },
+    
+    flipCoriolis: function() {
+        return this.physics?.flipCoriolisSign();
+    },
+    
+    // Presets
+    original: function() {
+        this.physics?.originalPhysics();
+    },
+    
+    enhanced: function() {
+        this.physics?.enhancedPhysics();
+    },
+    
+    gravityOnly: function() {
+        this.physics?.onlyGravity();
+    },
+    
+    // Test modes - isolate individual forces
+    testCoriolis: function() {
+        this.physics.enableCoriolis = true;
+        this.physics.enableCentrifugal = false;
+        this.physics.enableAirDrag = false;
+        console.log('🧪 TEST MODE: Only Coriolis + Gravity');
+        this.show();
+    },
+    
+    testCentrifugal: function() {
+        this.physics.enableCoriolis = false;
+        this.physics.enableCentrifugal = true;
+        this.physics.enableAirDrag = false;
+        console.log('🧪 TEST MODE: Only Centrifugal + Gravity');
+        this.show();
+    },
+    
+    // Ball property adjustments
+    setBall: function(radius, mass) {
+        if (radius) this.physics.ball.radius = radius;
+        if (mass) this.physics.ball.mass = mass;
+        console.log(`⚽ Ball updated: ${(this.physics.ball.radius*100).toFixed(1)}cm, ${(this.physics.ball.mass*1000).toFixed(1)}g`);
+    },
+    
+    // Presets for different ball types
+    tennisBall: function() {
+        this.setBall(0.035, 0.058);
+        this.physics.ball.dragCoeff = 0.55;
+        console.log('🎾 Tennis ball');
+    },
+    
+    baseball: function() {
+        this.setBall(0.037, 0.145);
+        this.physics.ball.dragCoeff = 0.47;
+        console.log('⚾ Baseball');
+    },
+    
+    pingPong: function() {
+        this.setBall(0.020, 0.0027);
+        this.physics.ball.dragCoeff = 0.47;
+        console.log('🏓 Ping pong ball');
+    }
+};
+
+// Show help on load
+console.log('╔════════════════════════════════════════════════════════════╗');
+console.log('║  🔬 Dryer Physics Debug Console Loaded!                   ║');
+console.log('║  Type: dryerDebug.help()  for available commands         ║');
+console.log('╚════════════════════════════════════════════════════════════╝');
