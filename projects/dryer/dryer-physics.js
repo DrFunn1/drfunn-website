@@ -1,6 +1,18 @@
 /**
- * Dryer Physics Engine
+ * Dryer Physics Engine - Enhanced Version
  * Custom rigid body physics for tennis ball in rotating drum with vanes
+ * 
+ * PHYSICS EXPLANATION:
+ * ====================
+ * We simulate the ball in the ROTATING REFERENCE FRAME of the drum.
+ * This means the drum appears stationary, but we must add "fictitious forces":
+ * 
+ * 1. CENTRIFUGAL FORCE: F = m*ω²*r (pushes outward from rotation axis)
+ * 2. CORIOLIS FORCE: F = -2m(ω × v) (deflects moving objects perpendicular to motion)
+ * 3. GRAVITY: Must be transformed to rotating frame
+ * 
+ * The "internal wind" effect you're seeing is likely from MISSING CORIOLIS FORCE.
+ * At high RPM, Coriolis becomes significant and affects trajectory realism.
  */
 
 class DryerPhysics {
@@ -11,28 +23,57 @@ class DryerPhysics {
         this.vaneCount = 5;
         this.vaneHeight = 0.30; // fraction of radius
         
-        // Ball properties
+        // Ball properties - NOW CONFIGURABLE for testing!
         this.ball = {
             x: 0,
             y: 0,
             vx: 0,
             vy: 0,
-            radius: 0.035, // 3.5cm tennis ball
-            mass: 0.058, // 58g tennis ball
-            restitution: 0.75 // coefficient of restitution for tennis ball
+            
+            // BALL SIZE: Affects collision detection and visual appearance
+            // Tennis ball: 0.035m, Racquetball: 0.028m, Baseball: 0.037m, Larger ball: 0.05m
+            radius: 0.035, // meters
+            
+            // BALL MASS: More mass = less affected by air drag and Coriolis
+            // Tennis ball: 0.058kg, Baseball: 0.145kg, Racquetball: 0.040kg, Heavy ball: 0.200kg
+            mass: 0.058, // kg
+            
+            // RESTITUTION: How "bouncy" the ball is (0 = no bounce, 1 = perfect bounce)
+            restitution: 0.75, // tennis ball is quite bouncy
+            
+            // DRAG COEFFICIENT: Sphere in turbulent air flow
+            // Smooth sphere: 0.47, Tennis ball (fuzzy): 0.55, Rough sphere: 0.8
+            dragCoeff: 0.55, // tennis ball has fuzzy surface
+            
+            // Cross-sectional area (calculated from radius)
+            get area() { return Math.PI * this.radius * this.radius; }
         };
         
-        // Gravity
-        this.gravity = 9.81; // m/s²
+        // Physical constants
+        this.gravity = 9.81; // m/s² - Earth's gravitational acceleration
+        this.airDensity = 1.225; // kg/m³ at sea level, 20°C
         
         // Drum rotation
-        this.drumAngle = 0;
-        this.drumAngularVelocity = 0;
+        this.drumAngle = 0; // current rotation angle (radians)
+        this.drumAngularVelocity = 0; // ω (rad/s)
+        
+        // Enable/disable physics effects for debugging
+        this.enableCoriolis = true;
+        this.enableCentrifugal = true;
+        this.enableAirDrag = true;
         
         // Surface tracking for MIDI
         this.surfaces = [];
         this.lastCollisionSurface = null;
         this.collisionCallbacks = [];
+        
+        // Debug info
+        this.debugInfo = {
+            centrifugalMagnitude: 0,
+            coriolisMagnitude: 0,
+            dragMagnitude: 0,
+            totalVelocity: 0
+        };
         
         // Initialize ball at center
         this.reset();
@@ -50,6 +91,14 @@ class DryerPhysics {
         
         // Regenerate surfaces
         this.updateSurfaces();
+    }
+    
+    // NEW: Allow changing ball properties during runtime for testing
+    setBallProperties(radius, mass, restitution, dragCoeff) {
+        if (radius !== undefined) this.ball.radius = radius;
+        if (mass !== undefined) this.ball.mass = mass;
+        if (restitution !== undefined) this.ball.restitution = restitution;
+        if (dragCoeff !== undefined) this.ball.dragCoeff = dragCoeff;
     }
     
     updateSurfaces() {
@@ -107,32 +156,86 @@ class DryerPhysics {
         // Update drum rotation
         this.drumAngle += this.drumAngularVelocity * dt;
         
-        // Transform to rotating reference frame
+        // =====================================================================
+        // ROTATING REFERENCE FRAME PHYSICS
+        // =====================================================================
+        
+        // 1. GRAVITATIONAL FORCE (transformed to rotating frame)
+        // Gravity always points down in world frame, but drum is rotating
         const cos = Math.cos(this.drumAngle);
         const sin = Math.sin(this.drumAngle);
         
-        // Apply gravity in rotating frame (gravity is always pointing down in world frame)
         const gravityX = -this.gravity * sin;
         const gravityY = -this.gravity * cos;
         
-        // Apply centrifugal force
-        const distFromCenter = Math.sqrt(this.ball.x * this.ball.x + this.ball.y * this.ball.y);
-        if (distFromCenter > 0.0001) {
-            const centrifugalForce = this.drumAngularVelocity * this.drumAngularVelocity * distFromCenter;
-            const cfX = (this.ball.x / distFromCenter) * centrifugalForce;
-            const cfY = (this.ball.y / distFromCenter) * centrifugalForce;
-            
-            this.ball.vx += (gravityX + cfX) * dt;
-            this.ball.vy += (gravityY + cfY) * dt;
-        } else {
-            this.ball.vx += gravityX * dt;
-            this.ball.vy += gravityY * dt;
+        // 2. CENTRIFUGAL FORCE (fictitious force in rotating frame)
+        // F_centrifugal = m*ω²*r (always points away from rotation axis)
+        let centrifugalX = 0;
+        let centrifugalY = 0;
+        
+        if (this.enableCentrifugal) {
+            const distFromCenter = Math.sqrt(this.ball.x * this.ball.x + this.ball.y * this.ball.y);
+            if (distFromCenter > 0.0001) {
+                const centrifugalMagnitude = this.drumAngularVelocity * this.drumAngularVelocity * distFromCenter;
+                centrifugalX = (this.ball.x / distFromCenter) * centrifugalMagnitude;
+                centrifugalY = (this.ball.y / distFromCenter) * centrifugalMagnitude;
+                
+                this.debugInfo.centrifugalMagnitude = centrifugalMagnitude;
+            }
         }
         
-        // Apply air drag (simplified)
-        const dragCoeff = 0.1;
-        this.ball.vx *= (1 - dragCoeff * dt);
-        this.ball.vy *= (1 - dragCoeff * dt);
+        // 3. CORIOLIS FORCE (fictitious force in rotating frame) - THIS WAS MISSING!
+        // F_coriolis = -2m(ω × v)
+        // In 2D: F_x = -2*m*ω*v_y, F_y = 2*m*ω*v_x
+        // This deflects moving objects perpendicular to their motion
+        let coriolisX = 0;
+        let coriolisY = 0;
+        
+        if (this.enableCoriolis) {
+            // Note: We don't multiply by mass here since we're calculating acceleration (F/m)
+            coriolisX = -2 * this.drumAngularVelocity * this.ball.vy;
+            coriolisY = 2 * this.drumAngularVelocity * this.ball.vx;
+            
+            const coriolisMag = Math.sqrt(coriolisX * coriolisX + coriolisY * coriolisY);
+            this.debugInfo.coriolisMagnitude = coriolisMag;
+        }
+        
+        // 4. AIR DRAG FORCE (quadratic drag model)
+        // F_drag = 0.5 * ρ * v² * C_d * A
+        // Direction: opposite to velocity
+        let dragX = 0;
+        let dragY = 0;
+        
+        if (this.enableAirDrag) {
+            const speed = Math.sqrt(this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy);
+            
+            if (speed > 0.001) {
+                // Quadratic drag force magnitude
+                const dragForceMagnitude = 0.5 * this.airDensity * speed * speed * 
+                                          this.ball.dragCoeff * this.ball.area;
+                
+                // Drag acceleration (F/m) opposing velocity
+                const dragAccelMagnitude = dragForceMagnitude / this.ball.mass;
+                
+                dragX = -(this.ball.vx / speed) * dragAccelMagnitude;
+                dragY = -(this.ball.vy / speed) * dragAccelMagnitude;
+                
+                this.debugInfo.dragMagnitude = dragAccelMagnitude;
+            }
+        }
+        
+        // =====================================================================
+        // APPLY ALL FORCES (as accelerations)
+        // =====================================================================
+        
+        const totalAccelX = gravityX + centrifugalX + coriolisX + dragX;
+        const totalAccelY = gravityY + centrifugalY + coriolisY + dragY;
+        
+        this.ball.vx += totalAccelX * dt;
+        this.ball.vy += totalAccelY * dt;
+        
+        // Update debug info
+        this.debugInfo.totalVelocity = Math.sqrt(this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy);
         
         // Update position
         this.ball.x += this.ball.vx * dt;
@@ -305,5 +408,18 @@ class DryerPhysics {
         }
         
         return vanes;
+    }
+    
+    // Get debug information
+    getDebugInfo() {
+        return {
+            ...this.debugInfo,
+            rpm: this.rpm,
+            angularVel: this.drumAngularVelocity.toFixed(3),
+            ballMass: this.ball.mass,
+            ballRadius: this.ball.radius,
+            position: `(${this.ball.x.toFixed(3)}, ${this.ball.y.toFixed(3)})`,
+            velocity: `(${this.ball.vx.toFixed(3)}, ${this.ball.vy.toFixed(3)})`
+        };
     }
 }
