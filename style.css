@@ -195,7 +195,7 @@ footer {
 /* Mobile */
 @media (max-width: 768px) {
   .banner {
-    content: url("common/drfunn-transparent-200x200.webp");
+    content: url("common/drfunn-transparent-230x230.webp");
     width: 200px;
     height: 200px;
     margin: 20px auto;
