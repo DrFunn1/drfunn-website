@@ -9,15 +9,8 @@
 <body style="background: #0f0f0f; color: white;">
 
     <div class="vid-experiment-wrapper">
-        <h1>Cloudflare Stream Ingestion Tests</h1>
+        <h1>Cloudflare Video Stream Tests</h1>
         
-        <div class="video-card">
-            <div class="portrait-container">
-                <stream src="5285fad16bd0abd54d4bdcda3be8d28a" controls preload="auto"></stream>
-            </div>
-            <div class="vid-caption">Test 01: Portrait (SDK Method)</div>
-        </div>
-    
         <div class="video-card">
             <div class="landscape-container">
                 <iframe
@@ -28,6 +21,19 @@
                 </iframe>
             </div>
             <div class="vid-caption">Test 02: 25min Landscape (iFrame Method)</div>
+        </div>
+		
+		<div class="video-card">
+            <div class="portrait-container">
+                <iframe
+                    src="https://customer-dk6q4c314h6xd6jo.cloudflarestream.com/5285fad16bd0abd54d4bdcda3be8d28a/iframe?poster=https%3A%2F%2Fcustomer-dk6q4c314h6xd6jo.cloudflarestream.com%2F5285fad16bd0abd54d4bdcda3be8d28a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D2s"
+                    loading="lazy"
+                    style="border: none; position: absolute; top: 0; left: 0; height: 100%; width: 100%;"
+                    allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+                    allowfullscreen="true">
+                </iframe>
+            </div>
+            <div class="vid-caption">Test 01: Portrait (iFrame Method - No Bars)</div>
         </div>
     </div>
 
