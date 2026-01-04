@@ -1,0 +1,34 @@
+/* Minimalist Reset for iFrame Testing */
+body {
+  background-color: #0f0f0f;
+  color: #ffffff;
+  font-family: sans-serif;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vid-experiment-wrapper {
+  width: 100%;
+  max-width: 800px;
+}
+
+/* Simple box that lets the iframe define the height */
+.video-card {
+  margin-bottom: 40px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+}
+
+iframe {
+  width: 100%;
+  border: none;
+  display: block;
+}
+
+.vid-caption {
+  padding: 10px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #888;
+}

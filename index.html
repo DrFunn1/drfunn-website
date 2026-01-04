@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DrFunn - Interactive Website Project Portfolio</title>
   
-<!-- Open Graph Meta Tags for Link Previews -->
+  <!-- Open Graph Meta Tags for Link Previews -->
   <meta property="og:title" content="DrFunn.com - Interactive Website Project Portfolio">
   <meta property="og:description" content="Software Playground">
-  <meta property="og:image" content="https://drfunn.com/assets/images/drfunn-banner.webp">
+  <meta property="og:image" content="https://drfunn.com/common/drfunn-transparent-200x200.png">
   <meta property="og:url" content="https://drfunn.com">
   <meta property="og:type" content="website">
   
@@ -16,18 +16,17 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="DrFunn.com - Interactive Website Project Portfolio">
   <meta name="twitter:description" content="Software Playground">
-  <meta name="twitter:image" content="https://drfunn.com/assets/images/drfunn-banner.webp">
+  <meta name="twitter:image" content="https://drfunn.com/common/drfunn-transparent-200x200.png">
   
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="icon" href="assets/images/drfunn-favicon.png" type="image/png">
-
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="common/drfunn-favicon.png" type="image/png">
   
 </head>
 <body>
   
   <!-- Main Content -->
   <header id="projects">
-    <img src="assets/images/drfunn-banner.webp" alt="DrFunn.com Banner" class="banner">
+    <img src="drfunn-banner.webp" alt="DrFunn.com Banner" class="banner">
     <h2 class="home-headline">Interactive Website Playground</h2>
   </header>
 
@@ -35,13 +34,19 @@
     <h2 class="section-title">Featured Projects</h2>
     
     <div class="project-grid">
-      <a href="projects/dryer/dryer.html" class="project-card">
-        <img src="assets/images/dryer-card.webp" alt="Dryer">
+      <a href="dryer/" class="project-card">
+        <img src="dryer-card.webp" alt="Dryer Project">
         <div class="project-info">
           <p>Dryer</p>
         </div>
       </a>
-      
+  
+      <a href="cf-vidtests/" class="project-card">
+        <img src="cf-vidtests-card.webp" alt="CloudFlare Video Tests">
+        <div class="project-info">
+          <p>CloudFlare Video Tests</p>
+        </div>
+      </a>
     </div>
   </main>
 
@@ -49,7 +54,7 @@
   <div id="footer-placeholder"></div>
 
   <script>
-    fetch('./footer-home.html')
+    fetch('./common/footer-home.html')
       .then(response => response.text())
       .then(data => {
         document.getElementById('footer-placeholder').innerHTML = data;
@@ -151,4 +156,3 @@
   </script>
 </body>
 </html>
-
