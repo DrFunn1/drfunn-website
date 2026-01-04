@@ -1,74 +1,91 @@
-/* Container styles for video experiments */
+/* Project: CF Video Tests 
+   Site: drfunn.com 
+   Description: Clean, vanilla CSS for Cloudflare Stream experiments.
+*/
+
+/* 1. Page Layout & Typography */
+body {
+  background-color: #0f0f0f;
+  color: #ffffff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.6;
+  margin: 0;
+  padding: 0;
+}
+
 .vid-experiment-wrapper {
   max-width: 900px;
   margin: 40px auto;
   padding: 0 20px;
-  font-family: sans-serif;
 }
 
+h1 {
+  border-bottom: 1px solid #333;
+  padding-bottom: 10px;
+  margin-bottom: 40px;
+  font-weight: 300;
+}
+
+/* 2. Video Card Container */
 .video-card {
   margin-bottom: 60px;
   background: #1a1a1a;
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
 }
 
-/* 9:16 Portrait Container */
+/* 3. The Video Containers (The "Boxes") */
+.portrait-container, 
+.landscape-container {
+  width: 100%;
+  background: #000;
+  display: flex; /* Helps children fill the space */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Portrait Logic (9:16) */
 .portrait-container {
   aspect-ratio: 9 / 16;
-  width: 100%;
-  max-width: 360px;
+  max-width: 360px; /* Standard portrait width */
   margin: 0 auto;
-  background: #000;
 }
 
-/* 16:9 Landscape Container */
+/* Landscape Logic (16:9) */
 .landscape-container {
   aspect-ratio: 16 / 9;
-  width: 100%;
-  background: #000;
 }
 
+/* 4. The Stream Element Styling */
 stream {
+  width: 100%;
+  height: 100%;
   display: block;
-  width: 100%;
-  height: 100%;
 }
 
-.vid-caption {
-  padding: 15px;
-  color: #ccc;
-  font-size: 0.9rem;
-  text-align: center;
-  border-top: 1px solid #333;
+/* SHADOW DOM PIERCING: 
+   These target the internal Cloudflare player parts. 
+*/
+
+/* Force the video to cover the entire container (removes grey bars) */
+stream::part(video) {
+  object-fit: cover;
 }
 
-
-/* Updated 9:16 Portrait Container */
-.portrait-container {
-  position: relative;
-  width: 100%;
-  max-width: 360px;
-  /* Use aspect-ratio but fallback to padding-top for older browser safety */
-  aspect-ratio: 9 / 16; 
-  margin: 0 auto;
-  background: #000;
-  overflow: hidden;
-}
-
-/* Force the Stream player to fill the space without bars */
-.portrait-container stream {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  /* Removes internal letterboxing */
-  object-fit: cover; 
-}
-
-/* Specific fix for the Cloudflare Shadow DOM player background */
+/* Make the player background transparent so it doesn't flash grey */
 stream::part(base) {
   background-color: transparent;
+}
+
+/* 5. Captions */
+.vid-caption {
+  padding: 20px;
+  color: #aaaaaa;
+  font-size: 0.95rem;
+  text-align: center;
+  background: #1e1e1e;
+  border-top: 1px solid #333;
 }
