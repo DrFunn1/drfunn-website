@@ -1,4 +1,10 @@
-/* Minimalist Reset for iFrame Testing */
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
   background-color: #0f0f0f;
   color: #ffffff;
@@ -13,11 +19,40 @@ body {
   max-width: 800px;
 }
 
-/* Simple box that lets the iframe define the height */
+h1 {
+  margin-bottom: 30px;
+  text-align: center;
+  font-size: 1.8rem;
+}
+
+/* Video Cards */
 .video-card {
   margin-bottom: 40px;
   background: #1a1a1a;
   border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Portrait Videos - Constrained Width */
+.video-card.portrait {
+  max-width: 360px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 40px;
+}
+
+/* Aspect Ratios */
+.video-card.landscape iframe {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  height: auto;
+}
+
+.video-card.portrait iframe {
+  aspect-ratio: 9 / 16;
+  width: 100%;
+  height: auto;
 }
 
 iframe {
@@ -27,8 +62,39 @@ iframe {
 }
 
 .vid-caption {
-  padding: 10px;
+  padding: 12px;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #888;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  body {
+    padding: 15px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+
+  .video-card.portrait {
+    max-width: 100%;
+  }
+
+  .vid-caption {
+    font-size: 0.8rem;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.2rem;
+  }
+
+  .video-card {
+    margin-bottom: 30px;
+  }
 }

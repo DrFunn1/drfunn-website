@@ -4,33 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CF Video Experiments | drfunn.com</title>
+    <link rel="icon" type="image/png" href="/common/drfunn-favicon.png">
     <link rel="stylesheet" href="style.css">
 </head>
-<body style="background: #0f0f0f; color: white;">
-
+<body>
     <div class="vid-experiment-wrapper">
         <h1>Cloudflare Video Stream Tests</h1>
         
-        <div class="video-card">
+        <div class="video-card portrait">
             <iframe
                 src="https://customer-dk6q4c314h6xd6jo.cloudflarestream.com/5285fad16bd0abd54d4bdcda3be8d28a/iframe?poster=https%3A%2F%2Fcustomer-dk6q4c314h6xd6jo.cloudflarestream.com%2F5285fad16bd0abd54d4bdcda3be8d28a%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D2s"
-                style="height: 640px;" 
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
                 allowfullscreen="true">
             </iframe>
             <div class="vid-caption">Test 01: Portrait (Manual Height Test)</div>
         </div>
         
-        <div class="video-card">
+        <div class="video-card landscape">
             <iframe
                 src="https://customer-dk6q4c314h6xd6jo.cloudflarestream.com/74ffd0754447e8f433292752c38af4eb/iframe?poster=https%3A%2F%2Fcustomer-dk6q4c314h6xd6jo.cloudflarestream.com%2F74ffd0754447e8f433292752c38af4eb%2Fthumbnails%2Fthumbnail.jpg%3Ftime%3D7m22s"
-                style="height: 450px;"
                 allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
                 allowfullscreen="true">
             </iframe>
             <div class="vid-caption">Test 02: Landscape (Manual Height Test)</div>
         </div>
-
+    </div>
+    
     <script defer src="https://embed.cloudflarestream.com/embed/sdk.latest.js"></script>
 </body>
 </html>
