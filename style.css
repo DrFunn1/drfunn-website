@@ -8,22 +8,15 @@ body {
 
 header {
   text-align: center;
-  /* Use a dark or matching background color for the 'sidebars' */
   background: #ffffff; 
   padding-bottom: 2rem;
   border-bottom: 1px solid #ddd;
-  width: 100%;
 }
 
 .banner {
   width: 100%;
-  /* Max-height prevents it from becoming too tall on huge monitors */
   max-height: 500px; 
-  
-  /* 'contain' ensures the whole image is visible without cropping */
   object-fit: contain; 
-  
-  /* 'auto' height allows it to scale proportionally */
   height: auto; 
   display: block;
   margin: 0 auto;
@@ -35,7 +28,7 @@ header {
   color: #555;
 }
 
-/* Responsive Project Grid */
+/* Project Grid */
 .content-section {
   max-width: 1000px;
   margin: 3rem auto;
@@ -80,27 +73,8 @@ header {
   font-weight: 600;
 }
 
-/* Tablet and Mobile Styles (media queries) */
-@media (max-width: 768px) {
-  .banner {
-    /* Set the background to your headshot */
-    content: url("../images/drfunn-transparent-200x200.png");
-    
-    /* Adjust size for a headshot look */
-    width: 200px;
-    height: 200px;
-    margin: 20px auto; /* Centers the headshot */
-    border-radius: 50%; /* Optional: makes the square image a circle */
-    object-fit: contain;
-  }
-
-  .home-headline {
-    font-size: 1.2rem;
-    padding: 0 10px;
-  }
-}
-/* Footer Section */
-#footer-placeholder {
+/* Footer */
+footer {
   margin-top: 50px;
   padding: 40px 20px;
   background: #fff;
@@ -108,33 +82,44 @@ header {
   text-align: center;
 }
 
-#contact-button {
-  display: inline-block;
+.contact-button-wrapper {
+  margin-top: 20px;
+}
+
+.contact-button-primary {
   padding: 12px 24px;
   background-color: #007bff;
   color: white;
-  text-decoration: none;
+  border: none;
   border-radius: 12px;
   font-weight: bold;
   cursor: pointer;
-  transition: background 0.2s;
+  font-size: 1rem;
+  transition: background 0.2s, transform 0.1s;
 }
 
-/* Modal Background Overlay */
+.contact-button-primary:hover {
+  background: #0056b3;
+  transform: translateY(-2px);
+}
+
+.contact-icon {
+  margin-right: 8px;
+}
+
+/* Contact Modal */
 #contact-modal {
   display: none;
   position: fixed;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  background: rgba(0, 0, 0, 0.8); /* Darker overlay to make the blue pop */
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-/* The Unified Blue Canvas */
-.modal-content {
-  background-color: #e3f2fd; /* The light blue canvas */
+.contact-modal-content {
+  background: #e3f2fd;
   padding: 40px;
   border-radius: 30px;
   width: 90%;
@@ -142,26 +127,40 @@ header {
   position: relative;
   box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
   border: 2px solid #bbdefb;
-  text-align: left;
 }
 
-#contact-form {
+.contact-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  font-size: 30px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: #556677;
+}
+
+.contact-modal-title {
+  margin-top: 0;
+  margin-bottom: 20px;
+  color: #1565c0;
+}
+
+.contact-form {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* Consistent spacing */
+  gap: 15px;
 }
 
-/* Fixes label visibility and font */
-#contact-form label {
-  font-family: inherit;
+.form-group label {
+  display: block;
   font-weight: 700;
-  color: #FFFF00; /* Yellow for high contrast against modal dark translucent */
-  margin-bottom: -5 px; /* Pulls label closer to its input */
+  color: #1565c0;
+  margin-bottom: 5px;
 }
 
-/* Unified Input & Textarea */
-#contact-form input, 
-#contact-form textarea {
+.form-input,
+.form-textarea {
   font-family: inherit;
   font-size: 1rem;
   padding: 12px;
@@ -171,22 +170,12 @@ header {
   background: #ffffff;
 }
 
-#contact-form textarea {
+.form-textarea {
   min-height: 120px;
   resize: vertical;
 }
 
-/* Close Button */
-#close-modal {
-  position: absolute;
-  top: 15px; right: 20px;
-  font-size: 30px;
-  cursor: pointer;
-  color: #556677;
-}
-
-/* Submit Button */
-#contact-form button {
+.form-submit {
   margin-top: 10px;
   padding: 14px;
   background: #2979ff;
@@ -198,7 +187,27 @@ header {
   transition: transform 0.1s, background 0.2s;
 }
 
-#contact-form button:hover {
+.form-submit:hover {
   background: #1565c0;
   transform: translateY(-2px);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .banner {
+    content: url("common/drfunn-transparent-200x200.webp");
+    width: 200px;
+    height: 200px;
+    margin: 20px auto;
+    border-radius: 50%;
+  }
+
+  .home-headline {
+    font-size: 1.2rem;
+    padding: 0 10px;
+  }
+
+  .contact-modal-content {
+    padding: 30px 20px;
+  }
 }
