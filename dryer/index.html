@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dryer - Chaotic Percussion Generator | DrFunn</title>
     
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="/common/drfunn-favicon.png">
-    
     <!-- SEO Meta Tags -->
     <meta name="description" content="Physics-based eurorack-style percussion generator. A tennis ball bouncing in a rotating dryer drum creates chaotic MIDI rhythms. Web Audio + Web MIDI support.">
     <meta name="keywords" content="eurorack, percussion generator, MIDI, Web Audio, physics simulation, music production, DrFunn">
@@ -15,27 +12,331 @@
     
     <!-- Open Graph Meta Tags (Facebook, LinkedIn, etc.) -->
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://drfunn.com/dryer/">
+    <meta property="og:url" content="https://drfunn.com/dryer">
     <meta property="og:title" content="Dryer - Chaotic Percussion Generator">
     <meta property="og:description" content="Physics-based eurorack-style percussion generator. A tennis ball in a rotating dryer drum creates chaotic MIDI rhythms.">
-    <meta property="og:image" content="https://drfunn.com/dryer/dryer-card-socials-1200x630.webp">
+    <meta property="og:image" content="https://drfunn.com/dryer/dryer-card.webp">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:image:alt" content="Dryer percussion generator interface">
     
     <!-- Twitter Card Meta Tags -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:url" content="https://drfunn.com/dryer/">
+    <meta name="twitter:url" content="https://drfunn.com/dryer">
     <meta name="twitter:title" content="Dryer - Chaotic Percussion Generator">
     <meta name="twitter:description" content="Physics-based eurorack percussion generator. Tennis ball + rotating drum = chaotic MIDI rhythms.">
-    <meta name="twitter:image" content="https://drfunn.com/dryer/dryer-card-socials-1200x630.webp">
+    <meta name="twitter:image" content="https://drfunn.com/dryer/dryer-card.webp">
     <meta name="twitter:image:alt" content="Dryer percussion generator interface">
+
+  
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" href="common/drfunn-favicon.png" type="image/png">
+
     
     <!-- Canonical URL -->
-    <link rel="canonical" href="https://drfunn.com/dryer/">
+    <link rel="canonical" href="https://drfunn.com/dryer">
     
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="dryer-styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .eurorack-module {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 2px solid #444;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            width: 600px;
+        }
+
+        .module-header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .module-title {
+            color: #00ff88;
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        .module-subtitle {
+            color: #888;
+            font-size: 11px;
+            letter-spacing: 1px;
+            margin-top: 5px;
+        }
+
+        /* Dryer Drum Display */
+        .dryer-display {
+            background: radial-gradient(circle, #e8e4d8 0%, #c8c4b8 60%, #a8a498 100%);
+            border: 8px solid #4a4a4a;
+            border-radius: 50%;
+            width: 350px;
+            height: 350px;
+            margin: 0 auto 30px;
+            position: relative;
+            box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3), 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .dryer-window {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: #000;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8);
+        }
+
+        #dryerCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Control Section */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            text-align: center;
+        }
+
+        .control-label {
+            color: #00ff88;
+            font-size: 11px;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .knob-container {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 8px;
+        }
+
+        .knob {
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle at 30% 30%, #555, #222);
+            border-radius: 50%;
+            position: relative;
+            cursor: pointer;
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.5);
+            transition: transform 0.05s;
+        }
+
+        .knob:active {
+            transform: scale(0.98);
+        }
+
+        .knob-indicator {
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            width: 3px;
+            height: 30px;
+            background: #00ff88;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            box-shadow: 0 0 5px rgba(0, 255, 136, 0.8);
+        }
+
+        .value-display {
+            color: #00ff88;
+            font-size: 14px;
+            font-weight: bold;
+            min-height: 20px;
+        }
+
+        /* Transport Controls */
+        .transport {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .transport-btn {
+            background: #333;
+            border: 2px solid #555;
+            color: #00ff88;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: all 0.2s;
+            letter-spacing: 1px;
+        }
+
+        .transport-btn:hover {
+            background: #444;
+            border-color: #00ff88;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .transport-btn.active {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.6);
+        }
+
+        /* MIDI Status */
+        .midi-status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+        }
+
+        .midi-status-text {
+            color: #888;
+            font-size: 11px;
+            letter-spacing: 1px;
+        }
+
+        .midi-status.connected .midi-status-text {
+            color: #00ff88;
+        }
+
+        /* Info panel */
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .info-text {
+            color: #888;
+            font-size: 11px;
+            line-height: 1.6;
+        }
+
+        /* Feature Controls */
+        .feature-controls {
+            margin-top: 25px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+            border: 1px solid #333;
+        }
+
+        .feature-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .feature-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .feature-label {
+            color: #00ff88;
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .feature-select {
+            background: #333;
+            border: 2px solid #555;
+            color: #00ff88;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feature-select:hover,
+        .feature-select:focus {
+            border-color: #00ff88;
+            outline: none;
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+        }
+
+        .feature-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #00ff88;
+        }
+
+        .feature-hint {
+            color: #666;
+            font-size: 9px;
+            font-style: italic;
+            margin-left: 26px;
+        }
+
+        /* Responsive */
+        @media (max-width: 650px) {
+            .eurorack-module {
+                width: 100%;
+                padding: 20px;
+            }
+
+            .dryer-display {
+                width: 280px;
+                height: 280px;
+            }
+
+            .dryer-window {
+                width: 240px;
+                height: 240px;
+            }
+
+            .controls {
+                gap: 15px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="main-content">
@@ -96,6 +397,35 @@
             <div class="transport">
                 <button class="transport-btn" id="startBtn">Start</button>
                 <button class="transport-btn" id="stopBtn">Stop</button>
+            </div>
+
+            <!-- New Feature Toggles -->
+            <div class="feature-controls">
+                <div class="feature-row">
+                    <div class="feature-group">
+                        <label class="feature-label">Ball Type</label>
+                        <select id="ballTypeSelect" class="feature-select">
+                            <option value="tennis">Tennis Ball</option>
+                            <option value="balloon">Balloon</option>
+                        </select>
+                    </div>
+                    
+                    <div class="feature-group">
+                        <label class="feature-label">
+                            <input type="checkbox" id="lintTrapToggle" class="feature-checkbox">
+                            Lint Trap
+                        </label>
+                        <div class="feature-hint">Filter low-velocity hits</div>
+                    </div>
+                    
+                    <div class="feature-group">
+                        <label class="feature-label">
+                            <input type="checkbox" id="moonGravityToggle" class="feature-checkbox">
+                            Moon Gravity
+                        </label>
+                        <div class="feature-hint">1/6th Earth gravity</div>
+                    </div>
+                </div>
             </div>
 
             <div class="midi-status" id="midiStatus">
