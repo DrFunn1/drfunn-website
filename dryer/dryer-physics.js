@@ -51,7 +51,14 @@ class DryerPhysics {
         
         // Physical constants
         this.gravity = 9.81; // m/s² - Earth's gravitational acceleration
+        this.earthGravity = 9.81; // Store original for moon toggle
+        this.moonGravity = 1.635; // 1/6th of Earth gravity
         this.airDensity = 1.225; // kg/m³ at sea level, 20°C
+        
+        // Feature toggles
+        this.lintTrapEnabled = false;
+        this.lintTrapThreshold = 0.15; // m/s - minimum velocity to trigger sound/MIDI
+        this.moonGravityEnabled = false;
         
         // Drag model selection
         this.useQuadraticDrag = false; // Set to false for original linear drag
@@ -106,6 +113,29 @@ class DryerPhysics {
         if (mass !== undefined) this.ball.mass = mass;
         if (restitution !== undefined) this.ball.restitution = restitution;
         if (dragCoeff !== undefined) this.ball.dragCoeff = dragCoeff;
+    }
+    
+    // Ball type presets
+    setTennisBall() {
+        this.setBallProperties(0.035, 0.058, 0.75, 0.55);
+        console.log('🎾 Tennis ball selected');
+    }
+    
+    setBalloonBall() {
+        this.setBallProperties(0.075, 0.001, 0.10, 0.47); // 15cm diameter, 1g, very low bounce
+        console.log('🎈 Balloon ball selected');
+    }
+    
+    // Feature toggles
+    setLintTrap(enabled) {
+        this.lintTrapEnabled = enabled;
+        console.log(`🧺 Lint trap: ${enabled ? 'ON (filtering low velocity)' : 'OFF'}`);
+    }
+    
+    setMoonGravity(enabled) {
+        this.moonGravityEnabled = enabled;
+        this.gravity = enabled ? this.moonGravity : this.earthGravity;
+        console.log(`🌙 Moon gravity: ${enabled ? 'ON (1/6th Earth)' : 'OFF (normal)'}`);
     }
     
     updateSurfaces() {
@@ -393,6 +423,11 @@ class DryerPhysics {
     }
     
     triggerCollision(surface, velocity) {
+        // Apply lint trap filter if enabled
+        if (this.lintTrapEnabled && velocity < this.lintTrapThreshold) {
+            return; // Ignore low-velocity collisions
+        }
+        
         // Debounce rapid collisions with same surface
         if (this.lastCollisionSurface === surface.id) {
             return;
@@ -571,15 +606,25 @@ QUICK COMMANDS (copy/paste into console):
    dryerDebug.enhanced()        - Enhanced physics (all features)
    dryerDebug.gravityOnly()     - Only gravity (debug mode)
 
+🎈 BALL TYPES:
+   dryerDebug.tennis()          - Tennis ball (default)
+   dryerDebug.balloon()         - Balloon (15cm, 1g, low bounce)
+   dryerDebug.baseball()        - Baseball (heavier)
+   dryerDebug.pingPong()        - Ping pong ball (very light)
+
+🌙 NEW FEATURES:
+   dryerDebug.moon()            - Toggle moon gravity (1/6th Earth)
+   dryerDebug.lintTrap()        - Toggle velocity filter
+
 🧪 ISOLATE FORCES (test one at a time):
    dryerDebug.testCoriolis()    - ONLY Coriolis + Gravity
    dryerDebug.testCentrifugal() - ONLY Centrifugal + Gravity
 
 📝 EXAMPLES:
    dryerDebug.show()            // See what's currently enabled
-   dryerDebug.original()        // Start with baseline
-   dryerDebug.coriolis()        // Add Coriolis
-   dryerDebug.flipCoriolis()    // Reverse Coriolis direction
+   dryerDebug.balloon()         // Switch to balloon ball
+   dryerDebug.moon()            // Enable moon gravity
+   dryerDebug.lintTrap()        // Filter low-velocity hits
    
 ─────────────────────────────────────────────────────────────────────
         `);
@@ -670,6 +715,36 @@ QUICK COMMANDS (copy/paste into console):
         this.setBall(0.020, 0.0027);
         this.physics.ball.dragCoeff = 0.47;
         console.log('🏓 Ping pong ball');
+    },
+    
+    balloon: function() {
+        this.physics.setBalloonBall();
+    },
+    
+    tennis: function() {
+        this.physics.setTennisBall();
+    },
+    
+    // Feature toggles
+    lintTrap: function(enabled) {
+        if (enabled === undefined) {
+            this.physics.lintTrapEnabled = !this.physics.lintTrapEnabled;
+        } else {
+            this.physics.lintTrapEnabled = enabled;
+        }
+        console.log(`🧺 Lint trap: ${this.physics.lintTrapEnabled ? 'ON' : 'OFF'} (threshold: ${this.physics.lintTrapThreshold} m/s)`);
+        return this.physics.lintTrapEnabled;
+    },
+    
+    moon: function(enabled) {
+        if (enabled === undefined) {
+            this.physics.moonGravityEnabled = !this.physics.moonGravityEnabled;
+        } else {
+            this.physics.moonGravityEnabled = enabled;
+        }
+        this.physics.gravity = this.physics.moonGravityEnabled ? this.physics.moonGravity : this.physics.earthGravity;
+        console.log(`🌙 Moon gravity: ${this.physics.moonGravityEnabled ? 'ON (1.635 m/s²)' : 'OFF (9.81 m/s²)'}`);
+        return this.physics.moonGravityEnabled;
     },
     
     // Debug collision highlighting

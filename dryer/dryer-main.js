@@ -41,6 +41,38 @@ class DryerApp {
         document.getElementById('startBtn').addEventListener('click', () => this.start());
         document.getElementById('stopBtn').addEventListener('click', () => this.stop());
         
+        // Set up new feature controls
+        const ballTypeSelect = document.getElementById('ballTypeSelect');
+        const lintTrapToggle = document.getElementById('lintTrapToggle');
+        const moonGravityToggle = document.getElementById('moonGravityToggle');
+        
+        if (ballTypeSelect) {
+            ballTypeSelect.addEventListener('change', (e) => {
+                if (e.target.value === 'tennis') {
+                    this.physics.setTennisBall();
+                } else if (e.target.value === 'balloon') {
+                    this.physics.setBalloonBall();
+                }
+                // Reset ball position when changing type
+                if (!this.isRunning) {
+                    this.physics.reset();
+                    this.ui.render(this.physics);
+                }
+            });
+        }
+        
+        if (lintTrapToggle) {
+            lintTrapToggle.addEventListener('change', (e) => {
+                this.physics.setLintTrap(e.target.checked);
+            });
+        }
+        
+        if (moonGravityToggle) {
+            moonGravityToggle.addEventListener('change', (e) => {
+                this.physics.setMoonGravity(e.target.checked);
+            });
+        }
+        
         // MIDI status click to enable MIDI output
         document.getElementById('midiStatus').addEventListener('click', async () => {
             if (!this.audio.isInitialized) {
