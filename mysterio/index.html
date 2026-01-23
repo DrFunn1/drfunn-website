@@ -1,0 +1,485 @@
+import React, { useState, useEffect, useRef } from 'react';
+
+// Domain class definition
+class Domain {
+  constructor(id, name, config, availablePortals) {
+    this.id = id;
+    this.name = name;
+    this.bg = config.bg;
+    this.primary = config.primary;
+    this.secondary = config.secondary;
+    this.accent = config.accent;
+    this.particleCount = config.particleCount;
+    this.availablePortals = availablePortals; // Array of portal IDs this domain contains
+  }
+}
+
+// Portal visual configurations
+const portalConfigs = {
+  1: {
+    type: 'cube',
+    color: '#00ffff',
+    size: 60,
+    animation: 'rotate'
+  },
+  2: {
+    type: 'sphere',
+    color: '#ff0080',
+    size: 70,
+    animation: 'pulse'
+  },
+  3: {
+    type: 'pyramid',
+    color: '#00ff00',
+    size: 65,
+    animation: 'float'
+  }
+};
+
+const SimulationSpaces = () => {
+  // Domain instances
+  const domains = useRef({
+    1: new Domain(1, 'void', {
+      bg: '#0a0a0f',
+      primary: '#00ffff',
+      secondary: '#0080ff',
+      accent: '#00ffff',
+      particleCount: 50
+    }, [2, 3]), // Has portals to domains 2 and 3
+    
+    2: new Domain(2, 'lattice', {
+      bg: '#0f0a0f',
+      primary: '#ff0080',
+      secondary: '#ff00ff',
+      accent: '#ff0080',
+      particleCount: 55
+    }, [1, 3]), // Has portals to domains 1 and 3
+    
+    3: new Domain(3, 'cascade', {
+      bg: '#0a0f0a',
+      primary: '#00ff00',
+      secondary: '#80ff00',
+      accent: '#00ff00',
+      particleCount: 52
+    }, [1, 2]) // Has portals to domains 1 and 2
+  }).current;
+
+  const [currentDomainId, setCurrentDomainId] = useState(1);
+  const [mousePos, setMousePos] = useState({ x: 0.5, y: 0.5 });
+  const [transitioning, setTransitioning] = useState(false);
+  const [cameraPos, setCameraPos] = useState({ x: 0, y: 0, z: 0 });
+  const canvasRef = useRef(null);
+  const particlesRef = useRef([]);
+  const portalsRef = useRef([]);
+
+  const currentDomain = domains[currentDomainId];
+
+  // Initialize particles for current domain
+  useEffect(() => {
+    particlesRef.current = Array.from({ length: currentDomain.particleCount }, () => ({
+      x: (Math.random() - 0.5) * 6,
+      y: (Math.random() - 0.5) * 6,
+      z: Math.random() * 8 + 4, // Start ahead of camera
+      baseSpeed: 0.0005 + Math.random() * 0.002
+    }));
+
+    // Create portals at medium distance
+    portalsRef.current = currentDomain.availablePortals.map((portalId, index) => {
+      const angle = (index / currentDomain.availablePortals.length) * Math.PI * 2;
+      const distance = 16 + Math.random() * 2;
+      return {
+        id: portalId,
+        x: Math.cos(angle) * distance * 0.7,
+        y: Math.sin(angle) * distance * 0.5,
+        z: distance,
+        config: portalConfigs[portalId]
+      };
+    });
+  }, [currentDomainId]);
+
+  // Track mouse position
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      setMousePos({
+        x: e.clientX / window.innerWidth,
+        y: e.clientY / window.innerHeight
+      });
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
+  // Navigation: gentle mouse-guided steering
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCameraPos(prev => {
+        // Gentle steering based on mouse position
+        const steerX = (mousePos.x - 0.5) * 0.03;
+        const steerY = (mousePos.y - 0.5) * 0.015;
+        
+        return {
+          x: prev.x + steerX,
+          y: prev.y + steerY,
+          z: prev.z + 0.01 // Constant forward movement
+        };
+      });
+    }, 16);
+
+    return () => clearInterval(interval);
+  }, [mousePos]);
+
+  // Handle portal entry
+  const handlePortalClick = (portal) => {
+    if (transitioning) return;
+    
+    // Check if close enough to portal
+    const dx = portal.x - cameraPos.x;
+    const dy = portal.y - cameraPos.y;
+    const dz = portal.z - cameraPos.z;
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    
+    if (distance < 2) {
+      setTransitioning(true);
+      setTimeout(() => {
+        setCurrentDomainId(portal.id);
+        setCameraPos({ x: 0, y: 0, z: 0 }); // Reset camera position
+        setTransitioning(false);
+      }, 800);
+    }
+  };
+
+  // Canvas animation
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener('resize', resize);
+
+    let animationId;
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const centerX = canvas.width / 2;
+      const centerY = canvas.height / 2;
+
+      // Update and draw particles
+      particlesRef.current.forEach(p => {
+        // Particles cycle back
+        if (p.z < cameraPos.z - 1) {
+          p.z = cameraPos.z + 8;
+          p.x = (Math.random() - 0.5) * 4;
+          p.y = (Math.random() - 0.5) * 4;
+        }
+
+        // Calculate relative position from camera
+        const relX = p.x - cameraPos.x;
+        const relY = p.y - cameraPos.y;
+        const relZ = p.z - cameraPos.z;
+
+        if (relZ <= 0) return; // Behind camera
+
+        // Project to 2D
+        const scale = 400 / relZ;
+        const screenX = centerX + relX * scale;
+        const screenY = centerY + relY * scale;
+        const size = scale * 0.2;
+        const opacity = Math.min(1, 3 / relZ);
+
+        // Draw particle
+        ctx.fillStyle = `${currentDomain.primary}${Math.floor(opacity * 180).toString(16).padStart(2, '0')}`;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw connections to nearby particles
+        particlesRef.current.forEach(other => {
+          if (other === p) return;
+          
+          const dist3D = Math.sqrt(
+            Math.pow(p.x - other.x, 2) +
+            Math.pow(p.y - other.y, 2) +
+            Math.pow(p.z - other.z, 2)
+          );
+
+          if (dist3D < 1.5) {
+            const otherRelX = other.x - cameraPos.x;
+            const otherRelY = other.y - cameraPos.y;
+            const otherRelZ = other.z - cameraPos.z;
+
+            if (otherRelZ <= 0) return;
+
+            const otherScale = 400 / otherRelZ;
+            const otherScreenX = centerX + otherRelX * otherScale;
+            const otherScreenY = centerY + otherRelY * otherScale;
+
+            const lineOpacity = Math.min(opacity, 3 / otherRelZ) * (1 - dist3D / 1.5) * 0.4;
+            
+            ctx.strokeStyle = `${currentDomain.secondary}${Math.floor(lineOpacity * 255).toString(16).padStart(2, '0')}`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(screenX, screenY);
+            ctx.lineTo(otherScreenX, otherScreenY);
+            ctx.stroke();
+          }
+        });
+      });
+
+      // Draw portals
+      portalsRef.current.forEach(portal => {
+        const relX = portal.x - cameraPos.x;
+        const relY = portal.y - cameraPos.y;
+        const relZ = portal.z - cameraPos.z;
+
+        if (relZ <= 0.5) return; // Behind or too close to camera
+
+        const scale = 400 / relZ;
+        const screenX = centerX + relX * scale;
+        const screenY = centerY + relY * scale;
+        const size = portal.config.size * scale / 3;
+        const opacity = Math.min(1, 4 / relZ);
+
+        // Draw portal glow
+        const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, size * 1.5);
+        gradient.addColorStop(0, `${portal.config.color}${Math.floor(opacity * 60).toString(16).padStart(2, '0')}`);
+        gradient.addColorStop(1, `${portal.config.color}00`);
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, size * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw portal shape
+        ctx.save();
+        ctx.translate(screenX, screenY);
+        
+        if (portal.config.type === 'cube') {
+          const rotation = Date.now() * 0.001;
+          ctx.rotate(rotation);
+          ctx.strokeStyle = `${portal.config.color}${Math.floor(opacity * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(-size/2, -size/2, size, size);
+          ctx.strokeRect(-size/3, -size/3, size * 2/3, size * 2/3);
+        } else if (portal.config.type === 'sphere') {
+          const pulse = Math.sin(Date.now() * 0.003) * 0.2 + 1;
+          ctx.strokeStyle = `${portal.config.color}${Math.floor(opacity * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(0, 0, size * pulse * 0.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.arc(0, 0, size * pulse * 0.7, 0, Math.PI * 2);
+          ctx.stroke();
+        } else if (portal.config.type === 'pyramid') {
+          const float = Math.sin(Date.now() * 0.002) * 5;
+          ctx.strokeStyle = `${portal.config.color}${Math.floor(opacity * 255).toString(16).padStart(2, '0')}`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, -size/2 + float);
+          ctx.lineTo(-size/2, size/2 + float);
+          ctx.lineTo(size/2, size/2 + float);
+          ctx.closePath();
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, -size/3 + float);
+          ctx.lineTo(-size/3, size/3 + float);
+          ctx.lineTo(size/3, size/3 + float);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+
+        // Draw distance indicator if close
+        const distance = Math.sqrt(relX * relX + relY * relY + relZ * relZ);
+        if (distance < 3) {
+          ctx.fillStyle = `${portal.config.color}${Math.floor(opacity * 200).toString(16).padStart(2, '0')}`;
+          ctx.font = `${12 * scale / 2}px 'Orbitron', monospace`;
+          ctx.textAlign = 'center';
+          ctx.fillText(distance < 2 ? 'ENTER' : '···', screenX, screenY + size + 20 * scale / 2);
+        }
+      });
+
+      animationId = requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', resize);
+    };
+  }, [cameraPos, currentDomain]);
+
+  // Handle canvas click for portal entry
+  const handleCanvasClick = (e) => {
+    const rect = canvasRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    const centerX = canvasRef.current.width / 2;
+    const centerY = canvasRef.current.height / 2;
+
+    // Check each portal
+    portalsRef.current.forEach(portal => {
+      const relX = portal.x - cameraPos.x;
+      const relY = portal.y - cameraPos.y;
+      const relZ = portal.z - cameraPos.z;
+
+      if (relZ <= 0.5) return;
+
+      const scale = 400 / relZ;
+      const screenX = centerX + relX * scale;
+      const screenY = centerY + relY * scale;
+      const size = portal.config.size * scale / 3;
+
+      const dist = Math.sqrt(Math.pow(clickX - screenX, 2) + Math.pow(clickY - screenY, 2));
+      
+      if (dist < size) {
+        handlePortalClick(portal);
+      }
+    });
+  };
+
+  return (
+    <div style={{
+      width: '100vw',
+      height: '100vh',
+      margin: 0,
+      padding: 0,
+      overflow: 'hidden',
+      background: currentDomain.bg,
+      position: 'relative',
+      cursor: 'none',
+      transition: 'background 1s cubic-bezier(0.4, 0, 0.2, 1)',
+      fontFamily: "'Orbitron', 'Courier New', monospace"
+    }}>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+          cursor: none !important;
+        }
+      `}</style>
+
+      {/* Neural net canvas */}
+      <canvas
+        ref={canvasRef}
+        onClick={handleCanvasClick}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          opacity: transitioning ? 0.3 : 1,
+          transition: 'opacity 0.8s ease'
+        }}
+      />
+
+      {/* Domain name indicator */}
+      <div style={{
+        position: 'absolute',
+        top: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: '11px',
+        fontWeight: '400',
+        letterSpacing: '6px',
+        color: currentDomain.accent,
+        opacity: 0.4,
+        textTransform: 'uppercase',
+        textShadow: `0 0 10px ${currentDomain.accent}`
+      }}>
+        {currentDomain.name}
+      </div>
+
+      {/* Navigation hint */}
+      <div style={{
+        position: 'absolute',
+        top: '70px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: '9px',
+        fontWeight: '300',
+        letterSpacing: '3px',
+        color: currentDomain.primary,
+        opacity: 0.3,
+        textTransform: 'uppercase'
+      }}>
+        move mouse to navigate
+      </div>
+
+      {/* Album title */}
+      <div style={{
+        position: 'absolute',
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        fontSize: '13px',
+        fontWeight: '700',
+        letterSpacing: '8px',
+        color: currentDomain.primary,
+        opacity: 0.5,
+        textTransform: 'uppercase',
+        textShadow: `0 0 15px ${currentDomain.primary}`
+      }}>
+        Songs for the Simulation
+      </div>
+
+      {/* Custom cursor */}
+      <div style={{
+        position: 'fixed',
+        top: `${mousePos.y * 100}vh`,
+        left: `${mousePos.x * 100}vw`,
+        width: '8px',
+        height: '8px',
+        border: `1px solid ${currentDomain.accent}`,
+        borderRadius: '50%',
+        pointerEvents: 'none',
+        transform: 'translate(-50%, -50%)',
+        zIndex: 10000,
+        boxShadow: `0 0 10px ${currentDomain.accent}`
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          width: '2px',
+          height: '2px',
+          background: currentDomain.accent,
+          borderRadius: '50%',
+          transform: 'translate(-50%, -50%)'
+        }} />
+      </div>
+
+      {/* Transition overlay */}
+      {transitioning && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: `radial-gradient(circle, ${currentDomain.bg}00 0%, ${currentDomain.bg} 100%)`,
+          zIndex: 100,
+          opacity: 1,
+          animation: 'pulse 0.8s ease-in-out'
+        }} />
+      )}
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0; }
+          50% { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default SimulationSpaces;
