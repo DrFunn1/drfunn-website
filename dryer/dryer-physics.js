@@ -121,9 +121,9 @@ class DryerPhysics {
         console.log('🎾 Tennis ball selected');
     }
     
-    setBalloonBall() {
-        this.setBallProperties(0.075, 0.001, 0.10, 0.47); // 15cm diameter, 1g, very low bounce
-        console.log('🎈 Balloon ball selected');
+    setSandbagBall() {
+        this.setBallProperties(0.05, 0.5, 0.15, 0.8); // 10cm diameter, 500g, low bounce, high drag
+        console.log('🏋️ Sandbag selected');
     }
     
     // Feature toggles
@@ -608,7 +608,7 @@ QUICK COMMANDS (copy/paste into console):
 
 🎈 BALL TYPES:
    dryerDebug.tennis()          - Tennis ball (default)
-   dryerDebug.balloon()         - Balloon (15cm, 1g, low bounce)
+   dryerDebug.sandbag()         - Sandbag (10cm, 500g, low bounce)
    dryerDebug.baseball()        - Baseball (heavier)
    dryerDebug.pingPong()        - Ping pong ball (very light)
 
@@ -622,7 +622,7 @@ QUICK COMMANDS (copy/paste into console):
 
 📝 EXAMPLES:
    dryerDebug.show()            // See what's currently enabled
-   dryerDebug.balloon()         // Switch to balloon ball
+   dryerDebug.sandbag()         // Switch to sandbag
    dryerDebug.moon()            // Enable moon gravity
    dryerDebug.lintTrap()        // Filter low-velocity hits
    
@@ -717,8 +717,8 @@ QUICK COMMANDS (copy/paste into console):
         console.log('🏓 Ping pong ball');
     },
     
-    balloon: function() {
-        this.physics.setBalloonBall();
+    sandbag: function() {
+        this.physics.setSandbagBall();
     },
     
     tennis: function() {

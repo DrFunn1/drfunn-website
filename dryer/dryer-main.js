@@ -50,8 +50,8 @@ class DryerApp {
             ballTypeSelect.addEventListener('change', (e) => {
                 if (e.target.value === 'tennis') {
                     this.physics.setTennisBall();
-                } else if (e.target.value === 'balloon') {
-                    this.physics.setBalloonBall();
+                } else if (e.target.value === 'sandbag') {
+                    this.physics.setSandbagBall();
                 }
                 // Reset ball position when changing type
                 if (!this.isRunning) {
