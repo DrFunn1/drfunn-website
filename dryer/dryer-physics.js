@@ -130,7 +130,7 @@ class DryerPhysics {
     }
 
     setBalloonBall() {
-        this.setBallProperties(0.075, 0.001, 0.10, 0.47); // 15cm diameter, 1g, very low bounce
+        this.setBallProperties(0.13, 0.01228, 0.30, 0.47); // 13cm radius, 1g rubber + 11.28g air inside
         console.log('🎈 Balloon selected');
     }
 
