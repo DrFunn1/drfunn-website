@@ -16,9 +16,9 @@ class DryerUI {
     initKnobs() {
         // Define knob configurations
         const knobConfigs = [
-            { id: 'rpm', min: 1, max: 40, initial: 20, step: 1 },
-            { id: 'drumSize', min: 60, max: 100, initial: 80, step: 1 },
-            { id: 'vanes', min: 1, max: 7, initial: 5, step: 1 },
+            { id: 'rpm', min: 0, max: 35, initial: 18, step: 1 },
+            { id: 'drumSize', min: 40, max: 80, initial: 60, step: 1 },
+            { id: 'vanes', min: 1, max: 7, initial: 4, step: 1 },
             { id: 'vaneHeight', min: 10, max: 50, initial: 30, step: 1 }
         ];
         
