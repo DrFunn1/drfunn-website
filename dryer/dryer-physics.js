@@ -46,7 +46,10 @@ class DryerPhysics {
             dragCoeff: 0.55, // tennis ball has fuzzy surface
             
             // Cross-sectional area (calculated from radius)
-            get area() { return Math.PI * this.radius * this.radius; }
+            get area() { return Math.PI * this.radius * this.radius; },
+
+            // Volume (calculated from radius)
+            get volume() { return (4/3) * Math.PI * Math.pow(this.radius, 3); }
         };
         
         // Physical constants
@@ -125,7 +128,12 @@ class DryerPhysics {
         this.setBallProperties(0.05, 0.5, 0.15, 0.8); // 10cm diameter, 500g, low bounce, high drag
         console.log('🏋️ Sandbag selected');
     }
-    
+
+    setBalloonBall() {
+        this.setBallProperties(0.075, 0.001, 0.10, 0.47); // 15cm diameter, 1g, very low bounce
+        console.log('🎈 Balloon selected');
+    }
+
     // Feature toggles
     setLintTrap(enabled) {
         this.lintTrapEnabled = enabled;
@@ -205,23 +213,34 @@ class DryerPhysics {
         const gravityX = -this.gravity * sin;
         const gravityY = -this.gravity * cos;
         
-        // 2. CENTRIFUGAL FORCE (fictitious force in rotating frame)
+        // 2. BUOYANCY FORCE (Archimedes' principle)
+        // F_buoyancy = ρ_air × V_ball × g (opposes gravity)
+        // Expressed as acceleration: a = (ρ_air × V_ball × g) / m_ball = (ρ_air / ρ_ball) × g
+        const buoyancyFactor = (this.airDensity * this.ball.volume) / this.ball.mass;
+        const buoyancyX = -gravityX * buoyancyFactor;
+        const buoyancyY = -gravityY * buoyancyFactor;
+
+        // 3. CENTRIFUGAL FORCE (fictitious force in rotating frame)
         // F_centrifugal = m*ω²*r (always points away from rotation axis)
         let centrifugalX = 0;
         let centrifugalY = 0;
-        
+
         if (this.enableCentrifugal) {
             const distFromCenter = Math.sqrt(this.ball.x * this.ball.x + this.ball.y * this.ball.y);
             if (distFromCenter > 0.0001) {
                 const centrifugalMagnitude = this.drumAngularVelocity * this.drumAngularVelocity * distFromCenter;
                 centrifugalX = (this.ball.x / distFromCenter) * centrifugalMagnitude;
                 centrifugalY = (this.ball.y / distFromCenter) * centrifugalMagnitude;
-                
+
+                // Buoyancy also opposes centrifugal force in rotating frame
+                centrifugalX *= (1 - buoyancyFactor);
+                centrifugalY *= (1 - buoyancyFactor);
+
                 this.debugInfo.centrifugalMagnitude = centrifugalMagnitude;
             }
         }
         
-        // 3. CORIOLIS FORCE (fictitious force in rotating frame) - THIS WAS MISSING!
+        // 4. CORIOLIS FORCE (fictitious force in rotating frame) - THIS WAS MISSING!
         // F_coriolis = -2m(ω × v)
         // In 2D: F_x = 2*m*ω*v_y, F_y = -2*m*ω*v_x (sign depends on rotation direction)
         // This deflects moving objects perpendicular to their motion
@@ -239,7 +258,7 @@ class DryerPhysics {
             this.debugInfo.coriolisMagnitude = coriolisMag;
         }
         
-        // 4. AIR DRAG FORCE
+        // 5. AIR DRAG FORCE
         let dragX = 0;
         let dragY = 0;
         
@@ -273,8 +292,8 @@ class DryerPhysics {
         // APPLY ALL FORCES (as accelerations)
         // =====================================================================
         
-        let totalAccelX = gravityX + centrifugalX + coriolisX;
-        let totalAccelY = gravityY + centrifugalY + coriolisY;
+        let totalAccelX = gravityX + buoyancyX + centrifugalX + coriolisX;
+        let totalAccelY = gravityY + buoyancyY + centrifugalY + coriolisY;
         
         // Only add drag to acceleration if using quadratic model
         // (linear drag is applied directly to velocity above)
@@ -609,6 +628,7 @@ QUICK COMMANDS (copy/paste into console):
 🎈 BALL TYPES:
    dryerDebug.tennis()          - Tennis ball (default)
    dryerDebug.sandbag()         - Sandbag (10cm, 500g, low bounce)
+   dryerDebug.balloon()         - Balloon (15cm, 1g, buoyant)
    dryerDebug.baseball()        - Baseball (heavier)
    dryerDebug.pingPong()        - Ping pong ball (very light)
 
@@ -720,7 +740,11 @@ QUICK COMMANDS (copy/paste into console):
     sandbag: function() {
         this.physics.setSandbagBall();
     },
-    
+
+    balloon: function() {
+        this.physics.setBalloonBall();
+    },
+
     tennis: function() {
         this.physics.setTennisBall();
     },

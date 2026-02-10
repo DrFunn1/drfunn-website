@@ -52,6 +52,8 @@ class DryerApp {
                     this.physics.setTennisBall();
                 } else if (e.target.value === 'sandbag') {
                     this.physics.setSandbagBall();
+                } else if (e.target.value === 'balloon') {
+                    this.physics.setBalloonBall();
                 }
                 // Reset ball position when changing type
                 if (!this.isRunning) {
