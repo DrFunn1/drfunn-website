@@ -9,7 +9,7 @@ class DryerAudio {
         this.midiOutput = null;
         this.midiEnabled = false;
         this.surfaceToNote = new Map();
-        this.baseNote = 36; // C2 - good bass range for percussion
+        this.baseNote = 24; // C1 - low base for wider note spread
         this.isInitialized = false;
     }
     
@@ -59,11 +59,13 @@ class DryerAudio {
     
     assignNotesToSurfaces(surfaces) {
         this.surfaceToNote.clear();
-        
-        // Assign MIDI notes chromatically starting from base note
+
+        // Assign MIDI notes in alternating minor/major thirds from base note
+        let noteNumber = this.baseNote;
         surfaces.forEach((surface, index) => {
-            const noteNumber = this.baseNote + index;
             this.surfaceToNote.set(surface.id, noteNumber);
+            const increment = (index % 2 === 0) ? 3 : 4;
+            noteNumber += increment;
         });
     }
     
