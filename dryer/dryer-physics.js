@@ -63,9 +63,6 @@ class DryerPhysics {
         this.lintTrapThreshold = 0.15; // m/s - minimum velocity to trigger sound/MIDI
         this.moonGravityEnabled = false;
         
-        // Drag model selection
-        this.useQuadraticDrag = false; // Set to false for original linear drag
-        
         // Drum rotation
         this.drumAngle = 0; // current rotation angle (radians)
         this.drumAngularVelocity = 0; // ω (rad/s)
@@ -258,49 +255,60 @@ class DryerPhysics {
             this.debugInfo.coriolisMagnitude = coriolisMag;
         }
         
-        // 5. AIR DRAG FORCE
+        // 5. AIR DRAG FORCE (with velocity field from rotating air)
         let dragX = 0;
         let dragY = 0;
-        
+
         if (this.enableAirDrag) {
-            const speed = Math.sqrt(this.ball.vx * this.ball.vx + this.ball.vy * this.ball.vy);
-            
-            if (speed > 0.001) {
-                if (this.useQuadraticDrag) {
-                    // Quadratic drag model: F_drag = 0.5 * ρ * v² * C_d * A
-                    const dragForceMagnitude = 0.5 * this.airDensity * speed * speed * 
+            // Calculate ball's radial position
+            const r = Math.sqrt(this.ball.x * this.ball.x + this.ball.y * this.ball.y);
+
+            if (r > 0.001) {
+                // Coupling coefficient: how well air locks to drum rotation
+                // c → 1 with more/taller vanes (solid body rotation)
+                // c → 0 with fewer/shorter vanes (quadratic profile)
+                const h = this.vaneHeight; // fraction (0.1 to 0.5)
+                const n = this.vaneCount;
+                const k = 0.5; // empirical coupling constant
+                const c = 1 - Math.exp(-k * n * h);
+
+                // Air velocity in rotating frame (tangential component)
+                // v_air(r) = ω*r*[(c + (1-c)*r/R) - 1] = ω*r*(1-c)*(r/R - 1)
+                const omega = this.drumAngularVelocity;
+                const vAirTangential = omega * r * (1 - c) * (r / this.drumRadius - 1);
+
+                // Convert tangential air velocity to Cartesian
+                const theta = Math.atan2(this.ball.y, this.ball.x);
+                const vAirX = -vAirTangential * Math.sin(theta);
+                const vAirY = vAirTangential * Math.cos(theta);
+
+                // Relative velocity (ball velocity relative to local air)
+                const vRelX = this.ball.vx - vAirX;
+                const vRelY = this.ball.vy - vAirY;
+                const vRelSpeed = Math.sqrt(vRelX * vRelX + vRelY * vRelY);
+
+                if (vRelSpeed > 0.001) {
+                    // Quadratic drag: F = -0.5 * ρ * |v_rel|² * C_d * A * v̂_rel
+                    const dragForceMagnitude = 0.5 * this.airDensity * vRelSpeed * vRelSpeed *
                                               this.ball.dragCoeff * this.ball.area;
                     const dragAccelMagnitude = dragForceMagnitude / this.ball.mass;
-                    
-                    dragX = -(this.ball.vx / speed) * dragAccelMagnitude;
-                    dragY = -(this.ball.vy / speed) * dragAccelMagnitude;
-                    
+
+                    // Drag opposes relative velocity
+                    dragX = -(vRelX / vRelSpeed) * dragAccelMagnitude;
+                    dragY = -(vRelY / vRelSpeed) * dragAccelMagnitude;
+
                     this.debugInfo.dragMagnitude = dragAccelMagnitude;
-                } else {
-                    // Original linear drag (simple damping)
-                    const dragCoeff = 0.1;
-                    const dampingFactor = Math.exp(-dragCoeff * dt);
-                    this.ball.vx *= dampingFactor;
-                    this.ball.vy *= dampingFactor;
-                    
-                    this.debugInfo.dragMagnitude = dragCoeff * speed;
+                    this.debugInfo.airVelocity = Math.sqrt(vAirX * vAirX + vAirY * vAirY);
                 }
             }
         }
-        
+
         // =====================================================================
         // APPLY ALL FORCES (as accelerations)
         // =====================================================================
-        
-        let totalAccelX = gravityX + buoyancyX + centrifugalX + coriolisX;
-        let totalAccelY = gravityY + buoyancyY + centrifugalY + coriolisY;
-        
-        // Only add drag to acceleration if using quadratic model
-        // (linear drag is applied directly to velocity above)
-        if (this.useQuadraticDrag) {
-            totalAccelX += dragX;
-            totalAccelY += dragY;
-        }
+
+        let totalAccelX = gravityX + buoyancyX + centrifugalX + coriolisX + dragX;
+        let totalAccelY = gravityY + buoyancyY + centrifugalY + coriolisY + dragY;
         
         this.ball.vx += totalAccelX * dt;
         this.ball.vy += totalAccelY * dt;
@@ -539,12 +547,6 @@ class DryerPhysics {
         return this.enableAirDrag;
     }
     
-    toggleQuadraticDrag(enable) {
-        this.useQuadraticDrag = enable !== undefined ? enable : !this.useQuadraticDrag;
-        console.log(`📐 Drag model: ${this.useQuadraticDrag ? 'QUADRATIC (realistic)' : 'LINEAR (original)'}`);
-        return this.useQuadraticDrag;
-    }
-    
     flipCoriolisSign() {
         this.coriolisSignFlip = (this.coriolisSignFlip || 1) * -1;
         console.log(`🔄 Coriolis sign: ${this.coriolisSignFlip > 0 ? 'POSITIVE' : 'NEGATIVE'}`);
@@ -555,7 +557,7 @@ class DryerPhysics {
         console.log('=== PHYSICS STATE ===');
         console.log(`🌀 Coriolis: ${this.enableCoriolis ? 'ON' : 'OFF'} (sign: ${(this.coriolisSignFlip || 1) > 0 ? '+' : '-'})`);
         console.log(`💫 Centrifugal: ${this.enableCentrifugal ? 'ON' : 'OFF'}`);
-        console.log(`💨 Air drag: ${this.enableAirDrag ? 'ON' : 'OFF'} (${this.useQuadraticDrag ? 'quadratic' : 'linear'})`);
+        console.log(`💨 Air drag: ${this.enableAirDrag ? 'ON' : 'OFF'} (vane-coupled)`);
         console.log(`⚙️  RPM: ${this.rpm}`);
         console.log(`📏 Ball: ${(this.ball.radius * 100).toFixed(1)}cm, ${(this.ball.mass * 1000).toFixed(1)}g`);
         console.log('====================');
@@ -572,8 +574,7 @@ class DryerPhysics {
         this.enableCoriolis = false;
         this.enableCentrifugal = true;
         this.enableAirDrag = true;
-        this.useQuadraticDrag = false;
-        console.log('✅ Reverted to ORIGINAL physics (no Coriolis, linear drag)');
+        console.log('✅ Reverted to ORIGINAL physics (no Coriolis)');
         this.showPhysicsState();
     }
     
@@ -581,8 +582,7 @@ class DryerPhysics {
         this.enableCoriolis = true;
         this.enableCentrifugal = true;
         this.enableAirDrag = true;
-        this.useQuadraticDrag = true;
-        console.log('✅ Enabled ENHANCED physics (with Coriolis, quadratic drag)');
+        console.log('✅ Enabled ENHANCED physics (all forces)');
         this.showPhysicsState();
     }
     
@@ -616,8 +616,7 @@ QUICK COMMANDS (copy/paste into console):
 🔄 TOGGLE INDIVIDUAL FORCES:
    dryerDebug.coriolis()        - Toggle Coriolis force
    dryerDebug.centrifugal()     - Toggle centrifugal force  
-   dryerDebug.drag()            - Toggle air drag
-   dryerDebug.quadDrag()        - Toggle quadratic vs linear drag
+   dryerDebug.drag()            - Toggle air drag (vane-coupled)
    dryerDebug.flipCoriolis()    - Flip Coriolis sign (+/-)
 
 🎯 QUICK PRESETS:
@@ -671,10 +670,6 @@ QUICK COMMANDS (copy/paste into console):
     
     drag: function() {
         return this.physics?.toggleDrag();
-    },
-    
-    quadDrag: function() {
-        return this.physics?.toggleQuadraticDrag();
     },
     
     flipCoriolis: function() {
