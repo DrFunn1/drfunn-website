@@ -3,6 +3,23 @@
  * Handles Web Audio synthesis and Web MIDI output
  */
 
+// Scale vectors: intervals in semitones, cycled indefinitely across all surfaces.
+// For diatonic scales the vector sums to 12, so each full cycle lands on the next octave.
+// For shorter vectors (e.g. [3,4] sums to 7) the octave accumulates across multiple cycles.
+const DRYER_SCALES = [
+    { label: 'Minor 3rds+4ths',  vector: [3, 4] },
+    { label: 'Chromatic',         vector: [1] },
+    { label: 'Whole Tone',        vector: [2] },
+    { label: 'Whole+Half',        vector: [2, 1] },
+    { label: 'Major',             vector: [2, 2, 1, 2, 2, 2, 1] },
+    { label: 'Natural Minor',     vector: [2, 1, 2, 2, 1, 2, 2] },
+    { label: 'Dorian',            vector: [2, 1, 2, 2, 2, 1, 2] },
+    { label: 'Pentatonic Major',  vector: [2, 2, 3, 2, 3] },
+    { label: 'Pentatonic Minor',  vector: [3, 2, 2, 3, 2] },
+    { label: 'Blues',             vector: [3, 2, 1, 1, 3, 2] },
+    { label: 'Diminished',        vector: [2, 1, 2, 1, 2, 1, 2, 1] },
+];
+
 class DryerAudio {
     constructor() {
         this.audioContext = null;
@@ -10,6 +27,7 @@ class DryerAudio {
         this.midiEnabled = false;
         this.surfaceToNote = new Map();
         this.baseNote = 24; // C1 - low base for wider note spread
+        this.scaleVector = [3, 4]; // default: Minor 3rds+4ths
         this.isInitialized = false;
     }
     
@@ -57,15 +75,18 @@ class DryerAudio {
         return 'MIDI: Web Audio Only';
     }
     
+    setScale(vector) {
+        this.scaleVector = vector;
+    }
+
     assignNotesToSurfaces(surfaces) {
         this.surfaceToNote.clear();
 
-        // Assign MIDI notes in alternating minor/major thirds from base note
         let noteNumber = this.baseNote;
         surfaces.forEach((surface, index) => {
             this.surfaceToNote.set(surface.id, noteNumber);
-            const increment = (index % 2 === 0) ? 3 : 4;
-            noteNumber += increment;
+            const interval = this.scaleVector[index % this.scaleVector.length];
+            noteNumber += interval;
         });
     }
     

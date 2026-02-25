@@ -42,9 +42,27 @@ class DryerApp {
         document.getElementById('stopBtn').addEventListener('click', () => this.stop());
         
         // Set up new feature controls
+        const scaleSelect = document.getElementById('scaleSelect');
         const ballTypeSelect = document.getElementById('ballTypeSelect');
         const lintTrapToggle = document.getElementById('lintTrapToggle');
         const moonGravityToggle = document.getElementById('moonGravityToggle');
+
+        // Populate scale dropdown from DRYER_SCALES (defined in dryer-audio.js)
+        if (scaleSelect) {
+            DRYER_SCALES.forEach((scale, i) => {
+                const option = document.createElement('option');
+                option.value = i;
+                option.textContent = scale.label;
+                if (i === 0) option.selected = true;
+                scaleSelect.appendChild(option);
+            });
+
+            scaleSelect.addEventListener('change', (e) => {
+                const scale = DRYER_SCALES[parseInt(e.target.value)];
+                this.audio.setScale(scale.vector);
+                this.audio.assignNotesToSurfaces(this.physics.surfaces);
+            });
+        }
         
         if (ballTypeSelect) {
             ballTypeSelect.addEventListener('change', (e) => {
