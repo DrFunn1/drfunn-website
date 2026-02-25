@@ -46,6 +46,7 @@ class DryerApp {
         const ballTypeSelect = document.getElementById('ballTypeSelect');
         const lintTrapToggle = document.getElementById('lintTrapToggle');
         const moonGravityToggle = document.getElementById('moonGravityToggle');
+        const scatterToggle = document.getElementById('scatterToggle');
 
         // Populate scale dropdown from DRYER_SCALES (defined in dryer-audio.js)
         if (scaleSelect) {
@@ -92,7 +93,14 @@ class DryerApp {
                 this.physics.setMoonGravity(e.target.checked);
             });
         }
-        
+
+        if (scatterToggle) {
+            scatterToggle.addEventListener('change', (e) => {
+                this.audio.setScatter(e.target.checked);
+                this.audio.assignNotesToSurfaces(this.physics.surfaces);
+            });
+        }
+
         // MIDI status click to enable MIDI output
         document.getElementById('midiStatus').addEventListener('click', async () => {
             if (!this.audio.isInitialized) {

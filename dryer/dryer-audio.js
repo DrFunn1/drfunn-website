@@ -12,6 +12,8 @@ const DRYER_SCALES = [
     { label: 'Whole Tone',        vector: [2] },
     { label: 'Whole+Half',        vector: [2, 1] },
     { label: 'Major',             vector: [2, 2, 1, 2, 2, 2, 1] },
+    { label: 'Lydian',            vector: [2, 2, 2, 1, 2, 2, 1] },
+    { label: 'Mixolydian',        vector: [2, 2, 1, 2, 2, 1, 2] },
     { label: 'Natural Minor',     vector: [2, 1, 2, 2, 1, 2, 2] },
     { label: 'Dorian',            vector: [2, 1, 2, 2, 2, 1, 2] },
     { label: 'Pentatonic Major',  vector: [2, 2, 3, 2, 3] },
@@ -28,6 +30,7 @@ class DryerAudio {
         this.surfaceToNote = new Map();
         this.baseNote = 24; // C1 - low base for wider note spread
         this.scaleVector = [3, 4]; // default: Minor 3rds+4ths
+        this.scatterEnabled = false;
         this.isInitialized = false;
     }
     
@@ -79,14 +82,32 @@ class DryerAudio {
         this.scaleVector = vector;
     }
 
+    setScatter(enabled) {
+        this.scatterEnabled = enabled;
+    }
+
     assignNotesToSurfaces(surfaces) {
         this.surfaceToNote.clear();
 
+        // Build the sequential note list from the scale vector
+        const notes = [];
         let noteNumber = this.baseNote;
         surfaces.forEach((surface, index) => {
-            this.surfaceToNote.set(surface.id, noteNumber);
-            const interval = this.scaleVector[index % this.scaleVector.length];
-            noteNumber += interval;
+            notes.push(noteNumber);
+            noteNumber += this.scaleVector[index % this.scaleVector.length];
+        });
+
+        // Scatter: Fisher-Yates shuffle redistributes notes randomly across surfaces.
+        // The same set of pitches is used — only which surface plays which note changes.
+        if (this.scatterEnabled) {
+            for (let i = notes.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [notes[i], notes[j]] = [notes[j], notes[i]];
+            }
+        }
+
+        surfaces.forEach((surface, index) => {
+            this.surfaceToNote.set(surface.id, notes[index]);
         });
     }
     
