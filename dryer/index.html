@@ -235,18 +235,92 @@
         }
 
         /* Info panel */
-        .info-panel {
+        /* WebMIDI Help Accordion */
+        .midi-help {
             margin-top: 20px;
-            padding: 15px;
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 5px;
             border: 1px solid #333;
+            border-radius: 5px;
+            overflow: hidden;
         }
 
-        .info-text {
+        .midi-help-intro {
+            padding: 12px 15px;
             color: #888;
             font-size: 11px;
             line-height: 1.6;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .midi-help details {
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        .midi-help details:last-child {
+            border-bottom: none;
+        }
+
+        .midi-help summary {
+            padding: 10px 15px;
+            color: #00ff88;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .midi-help summary::-webkit-details-marker { display: none; }
+
+        .midi-help summary::after {
+            content: '▸';
+            color: #555;
+            font-size: 12px;
+        }
+
+        .midi-help details[open] summary::after {
+            content: '▾';
+            color: #00ff88;
+        }
+
+        .midi-help summary:hover {
+            background: rgba(0, 255, 136, 0.04);
+        }
+
+        .midi-help-content {
+            padding: 4px 15px 14px 15px;
+        }
+
+        .midi-help-content ol {
+            color: #888;
+            font-size: 11px;
+            line-height: 1.7;
+            padding-left: 18px;
+            margin: 0;
+        }
+
+        .midi-help-content li {
+            margin-bottom: 9px;
+        }
+
+        .midi-help-content li strong {
+            color: #aaa;
+            display: block;
+            margin-bottom: 1px;
+        }
+
+        .midi-help-content a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+
+        .midi-help-content a:hover {
+            text-decoration: underline;
         }
 
         /* Feature Controls */
@@ -463,12 +537,61 @@
                 <div class="midi-status-text">MIDI: Web Audio (Click to enable MIDI Out)</div>
             </div>
 
-            <div class="info-panel">
-                <div class="info-text">
-                    Each surface generates a unique MIDI note when struck. 
-                    Adjust parameters while running for real-time timbre changes.
-                    MIDI output available for external synths via Web MIDI API.
+            <div class="midi-help">
+                <div class="midi-help-intro">
+                    Dryer can send WebMIDI to your softsynth, DAW, or hardware interface.
+                    A virtual MIDI cable is required — expand your OS below for setup instructions.
+                    Problems? Contact me via the footer.
                 </div>
+
+                <details>
+                    <summary>Windows</summary>
+                    <div class="midi-help-content">
+                        <ol>
+                            <li>
+                                <strong>Install loopMIDI</strong>
+                                Download and launch loopMIDI from <a href="https://www.tobias-erichsen.de/software/loopmidi.html" target="_blank" rel="noopener">tobias-erichsen.de</a>.
+                                In the loopMIDI window click <b>+</b> to create a new port — name it something clear like <em>WebMIDI to Windows</em>.
+                                Leave loopMIDI running in the system tray; the port only exists while it's running.
+                            </li>
+                            <li>
+                                <strong>Connect Dryer to the port</strong>
+                                Open Dryer in Chrome (required for WebMIDI). Click the MIDI status bar at the bottom of the module and select your loopMIDI port.
+                                If the port isn't listed, refresh the page and try again.
+                            </li>
+                            <li>
+                                <strong>Route to your DAW or softsynth</strong>
+                                Your Windows apps should now see the loopMIDI device. Configure your DAW or synth to receive MIDI input from it — typically via Preferences › MIDI Inputs.
+                            </li>
+                            <li><strong>Have Funn!</strong></li>
+                        </ol>
+                    </div>
+                </details>
+
+                <details>
+                    <summary>Mac</summary>
+                    <div class="midi-help-content">
+                        <ol>
+                            <li>
+                                <strong>Create a virtual port via IAC Driver</strong>
+                                Open <em>Applications › Utilities › Audio MIDI Setup</em>.
+                                From the menu choose <em>Window › Show MIDI Studio</em>.
+                                Double-click the <b>IAC Driver</b> icon, check <b>Device is online</b>, then click <b>+</b> in the Ports area to add a bus — name it something like <em>WebMIDI to MAC</em>.
+                                This bus is now a virtual MIDI cable available system-wide.
+                            </li>
+                            <li>
+                                <strong>Connect Dryer to the port</strong>
+                                Open Dryer in Chrome (required for WebMIDI). Click the MIDI status bar at the bottom of the module and select your IAC port.
+                                If the port isn't listed, refresh the page and try again.
+                            </li>
+                            <li>
+                                <strong>Route to your DAW or softsynth</strong>
+                                Your Mac apps should now see the IAC device. Configure your DAW or synth to receive MIDI input from it — typically via Preferences › MIDI Inputs.
+                            </li>
+                            <li><strong>Have Funn!</strong></li>
+                        </ol>
+                    </div>
+                </details>
             </div>
         </div>
     </div>
