@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" width="400" height="300">
+  <!-- Background -->
+  <rect width="400" height="300" fill="#1a1a2e"/>
+
+  <!-- SD card body -->
+  <rect x="130" y="40" width="140" height="180" rx="10" ry="10" fill="#2d2d4e" stroke="#444477" stroke-width="2"/>
+
+  <!-- SD card notch (top-left corner cut) -->
+  <polygon points="130,40 158,40 130,68" fill="#1a1a2e"/>
+
+  <!-- Card label area -->
+  <rect x="140" y="80" width="120" height="70" rx="4" fill="#1a1a3e" stroke="#333366" stroke-width="1"/>
+
+  <!-- Gold contacts at bottom -->
+  <rect x="143" y="195" width="14" height="20" rx="2" fill="#c8a84b"/>
+  <rect x="163" y="195" width="14" height="20" rx="2" fill="#c8a84b"/>
+  <rect x="183" y="195" width="14" height="20" rx="2" fill="#c8a84b"/>
+  <rect x="203" y="195" width="14" height="20" rx="2" fill="#c8a84b"/>
+  <rect x="223" y="195" width="14" height="20" rx="2" fill="#c8a84b"/>
+  <rect x="243" y="195" width="14" height="20" rx="2" fill="#c8a84b"/>
+
+  <!-- Lightning bolt -->
+  <polygon points="212,88 196,122 208,122 188,162 218,122 204,122 222,88" fill="#f0c040" opacity="0.95"/>
+
+  <!-- Subtle glow behind bolt -->
+  <polygon points="212,88 196,122 208,122 188,162 218,122 204,122 222,88" fill="none" stroke="#ffe080" stroke-width="3" opacity="0.35"/>
+
+  <!-- "FLASH" label -->
+  <text x="200" y="178" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" font-weight="700" fill="#8888bb" letter-spacing="3">FLASH</text>
+
+  <!-- Subtle circuit trace decoration -->
+  <line x1="130" y1="150" x2="108" y2="150" stroke="#334" stroke-width="1.5"/>
+  <line x1="108" y1="150" x2="108" y2="180" stroke="#334" stroke-width="1.5"/>
+  <circle cx="108" cy="183" r="3" fill="#334"/>
+
+  <line x1="270" y1="120" x2="292" y2="120" stroke="#334" stroke-width="1.5"/>
+  <line x1="292" y1="120" x2="292" y2="95" stroke="#334" stroke-width="1.5"/>
+  <circle cx="292" cy="92" r="3" fill="#334"/>
+</svg>
