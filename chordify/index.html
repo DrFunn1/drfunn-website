@@ -1,0 +1,360 @@
+# Chordify: Markov Chain Chord Generator
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chordify | Markov Experiments</title>
+    <style>
+        :root {
+            --bg: #0a0a0a;
+            --card: #161616;
+            --accent: #00f2ff;
+            --text: #e0e0e0;
+            --dim: #666;
+            --danger: #ff4d4d;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg);
+
+            color: var(--text);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            user-select: none;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: var(--card);
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            border: 1px solid #333;
+        }
+
+
+        header {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            margin: 0;
+            background: linear-gradient(90deg, var(--accent), #7000ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-bar {
+            font-size: 12px;
+            color: var(--dim);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+
+            align-items: center;
+        }
+
+        .status-dot {
+            height: 8px;
+            width: 8px;
+            background-color: var(--dim);
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .status-dot.active { background-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+
+        .control-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+
+
+        label {
+            display: block;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--dim);
+            margin-bottom: 8px;
+        }
+
+        select, button.toggle {
+            width: 100%;
+            background: #222;
+            border: 1px solid #444;
+            color: white;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 15px;
+            appearance: none;
+            outline: none;
+
+        }
+
+        .state-display {
+            background: #000;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 20px 0;
+            border-left: 4px solid var(--accent);
+        }
+
+        .current-quality {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent);
+            display: block;
+        }
+
+        .pad-grid {
+            display: grid;
+
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .note-btn {
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 18px 0;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.1s ease;
+            touch-action: manipulation;
+        }
+
+        .note-btn:active {
+            background: var(--accent);
+
+            color: black;
+            transform: scale(0.95);
+        }
+
+        .note-btn.black {
+            background: #1a1a1a;
+            color: #888;
+        }
+
+        #console {
+            margin-top: 20px;
+            height: 100px;
+            background: #050505;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 11px;
+            overflow-y: auto;
+            color: #00ff41;
+
+            text-align: left;
+        }
+
+        .footer-info {
+            margin-top: 20px;
+            font-size: 10px;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Chordify</h1>
+            <div class="status-bar">
+                <span>Markov Engine v0.2</span>
+                <span><span id="midi-dot" class="status-dot"></span> <span id="status-text">MIDI Offline</span></span>
+
+            </div>
+        </header>
+
+        <div class="control-group">
+            <label>Operating Mode</label>
+            <select id="mode">
+                <option value="trigger">Trigger Mode (Map to Matrix)</option>
+                <option value="root">Root Mode (Input = Bass)</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Transition Logic</label>
+            <select id="logic">
+                <option value="smooth">Smooth (Diatonic Flow)</option>
+                <option value="chaos">Chaos (Atonal Jumps)</option>
+            </select>
+        </div>
+
+
+        <div class="state-display">
+            <label>Active State</label>
+            <span class="current-quality" id="display-quality">Maj7</span>
+            <small id="display-notes" style="color:#888; font-size:10px;">0, 4, 7, 11</small>
+        </div>
+
+        <label>Touch Pad (Simulate MIDI)</label>
+        <div class="pad-grid">
+            <button class="note-btn" onclick="triggerNote(60, 'C')">C</button>
+            <button class="note-btn black" onclick="triggerNote(61, 'C#')">C#</button>
+            <button class="note-btn" onclick="triggerNote(62, 'D')">D</button>
+            <button class="note-btn black" onclick="triggerNote(63, 'D#')">D#</button>
+            <button class="note-btn" onclick="triggerNote(64, 'E')">E</button>
+            <button class="note-btn" onclick="triggerNote(65, 'F')">F</button>
+            <button class="note-btn black" onclick="triggerNote(66, 'F#')">F#</button>
+            <button class="note-btn" onclick="triggerNote(67, 'G')">G</button>
+            <button class="note-btn black" onclick="triggerNote(68, 'G#')">G#</button>
+            <button class="note-btn" onclick="triggerNote(69, 'A')">A</button>
+            <button class="note-btn black" onclick="triggerNote(70, 'A#')">A#</button>
+
+            <button class="note-btn" onclick="triggerNote(71, 'B')">B</button>
+        </div>
+
+        <div id="console">Initializing...</div>
+        
+        <div class="footer-info">DrFunn Labs // GitHub Repo: Chordify</div>
+    </div>
+
+    <script>
+        // 1. Expanded Chord Qualities
+        const chordQualities = {
+            'Maj7': [0, 4, 7, 11],
+            'm7': [0, 3, 7, 10],
+            'Dom7': [0, 4, 7, 10],
+            'm7b5': [0, 3, 6, 10],
+            'Maj9': [0, 4, 7, 11, 14],
+            'm9': [0, 3, 7, 10, 14],
+            'sus4': [0, 5, 7, 10],
+            'dim7': [0, 3, 6, 9]
+
+        };
+        const qualitiesArray = Object.keys(chordQualities);
+
+        // Fixed roots for Trigger Mode (12 chromatic steps)
+        const triggerRoots = [48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59];
+
+        let currentQualityIndex = 0;
+        let midiOutput = null;
+
+        // 2. Markov Transition Matrix
+        // Rows: Current State (0-7)
+        // Cols: Input Interval % 12
+        const smoothMatrix = [
+            [0, 1, 1, 2, 0, 1, 3, 0, 4, 1, 2, 0], // From Maj7
+            [1, 2, 0, 1, 1, 5, 1, 2, 1, 0, 3, 1], // From m7
+            [2, 0, 4, 2, 6, 1, 2, 0, 2, 3, 2, 5], // From Dom7
+            [1, 3, 3, 0, 1, 2, 3, 7, 1, 1, 0, 3], // From m7b5
+            [4, 0, 1, 4, 0, 5, 4, 4, 0, 1, 4, 0], // From Maj9
+            [5, 1, 2, 5, 5, 0, 5, 5, 1, 2, 5, 5], // From m9
+
+            [6, 2, 6, 2, 0, 6, 2, 6, 2, 0, 6, 2], // From sus4
+            [7, 3, 7, 3, 7, 3, 7, 0, 7, 3, 7, 3]  // From dim7
+        ];
+
+        // 3. MIDI Setup
+        if (navigator.requestMIDIAccess) {
+            navigator.requestMIDIAccess().then(onMIDISuccess, onMIDIFailure);
+        } else {
+            log("Web MIDI not supported. Using Virtual Engine.");
+        }
+
+        function onMIDISuccess(midiAccess) {
+            document.getElementById('status-text').innerText = "MIDI Active";
+            document.getElementById('midi-dot').classList.add('active');
+            
+            for (let input of midiAccess.inputs.values()) {
+                input.onmidimessage = getMIDIMessage;
+            }
+            const outputs = Array.from(midiAccess.outputs.values());
+
+            if (outputs.length > 0) midiOutput = outputs[0];
+            log("System Ready.");
+        }
+
+        function onMIDIFailure() {
+            log("MIDI Access Denied.");
+        }
+
+        function getMIDIMessage(message) {
+            let command = message.data[0] & 0xf0;
+            let note = message.data[1];
+            let velocity = message.data[2];
+            if (command === 144 && velocity > 0) {
+                processChord(note, velocity);
+            }
+        }
+
+        // 4. Core Logic
+        function triggerNote(note, name) {
+
+            log(`Trigger: ${name} (${note})`);
+            processChord(note, 100);
+        }
+
+        function processChord(note, velocity) {
+            const inputIndex = note % 12;
+            const logicMode = document.getElementById('logic').value;
+            const mappingMode = document.getElementById('mode').value;
+
+            // Transition Logic
+            let nextIndex;
+            if (logicMode === 'chaos') {
+                // High entropy jump
+                nextIndex = (currentQualityIndex + inputIndex + Math.floor(Math.random() * 3)) % qualitiesArray.length;
+            } else {
+                // Markov walk
+                nextIndex = smoothMatrix[currentQualityIndex][inputIndex];
+            }
+
+
+            currentQualityIndex = nextIndex;
+            const qualityName = qualitiesArray[currentQualityIndex];
+            const intervals = chordQualities[qualityName];
+
+            // Determine Root
+            const root = (mappingMode === 'root') ? note : triggerRoots[inputIndex];
+
+            // UI Update
+            document.getElementById('display-quality').innerText = qualityName;
+            document.getElementById('display-notes').innerText = intervals.join(', ');
+
+            playChord(root, intervals, velocity);
+        }
+
+        function playChord(root, intervals, velocity) {
+            if (!midiOutput) {
+                log(`Virtual Play: Root ${root} [${intervals}]`);
+                return;
+            }
+
+
+            intervals.forEach(interval => {
+                midiOutput.send([0x90, root + interval, velocity]);
+                setTimeout(() => {
+                    midiOutput.send([0x80, root + interval, 0]);
+                }, 1000);
+            });
+        }
+
+        function log(msg) {
+            const c = document.getElementById('console');
+            c.innerHTML = `> ${msg}<br>${c.innerHTML}`;
+        }
+    </script>
+</body>
+</html>
+
+
