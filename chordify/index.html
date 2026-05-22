@@ -196,7 +196,15 @@
         </div>
 
         <div class="control-group">
-            <label>MIDI Channel</label>
+            <label>Web Audio Output</label>
+            <select id="webAudioToggle">
+                <option value="on">On</option>
+                <option value="off">Off</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>MIDI Output Channel</label>
             <select id="midiChannel">
                 <option value="0">1</option>
                 <option value="1">2</option>
@@ -300,6 +308,7 @@
         let activeVoices = [];
         let lastNoteTime = 0;
         let lastMIDINotes = [];
+        let webAudioEnabled = true;
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
@@ -363,6 +372,10 @@
         function setupEventListeners() {
             document.getElementById('midiInput').addEventListener('change', updateMIDIConnections);
             document.getElementById('midiOutput').addEventListener('change', updateMIDIConnections);
+            document.getElementById('webAudioToggle').addEventListener('change', (e) => {
+                webAudioEnabled = e.target.value === 'on';
+                log(`Web Audio: ${webAudioEnabled ? 'ON' : 'OFF'}`);
+            });
         }
 
         function updateMIDIConnections() {
@@ -433,7 +446,7 @@
         }
 
         function playChord(root, intervals, velocity) {
-            playWebAudioChord(root, intervals, velocity);
+            if (webAudioEnabled) playWebAudioChord(root, intervals, velocity);
             if (midiOutput) sendMIDIChord(root, intervals, velocity);
         }
 
@@ -443,6 +456,8 @@
 
             const amp = (velocity / 127) * 0.15;
             const now = audioContext.currentTime;
+            const sustainTime = 0.8;  // 800ms attack + sustain
+            const decayTime = 3.0;    // 3 second exponential decay
 
             intervals.forEach(interval => {
                 const freq = midiNoteToFrequency(root + interval);
@@ -451,14 +466,22 @@
 
                 osc.type = 'triangle';
                 osc.frequency.value = freq;
+
+                // Attack: 10ms to full volume
                 gain.gain.setValueAtTime(0, now);
-                gain.gain.linearRampToValueAtTime(amp, now + 0.02);  // 20ms attack
+                gain.gain.linearRampToValueAtTime(amp, now + 0.01);
+
+                // Sustain: hold full volume
+                gain.gain.setValueAtTime(amp, now + sustainTime);
+
+                // Decay: exponential tail-off over 3 seconds
+                gain.gain.exponentialRampToValueAtTime(0.001, now + sustainTime + decayTime);
 
                 osc.connect(gain);
                 gain.connect(audioContext.destination);
                 osc.start(now);
 
-                activeVoices.push({ osc, gain, stopTime: now + 2.15 });
+                activeVoices.push({ osc, gain, stopTime: now + sustainTime + decayTime });
             });
         }
 
@@ -466,9 +489,10 @@
             if (!audioContext) return;
             const now = audioContext.currentTime;
             activeVoices.forEach(({ osc, gain }) => {
+                // Immediate fade-out for next chord
                 gain.gain.setValueAtTime(gain.gain.value, now);
-                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);  // 150ms release
-                osc.stop(now + 0.15);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.stop(now + 0.1);
             });
             activeVoices = [];
         }
