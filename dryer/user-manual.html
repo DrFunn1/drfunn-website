@@ -197,6 +197,55 @@
     }
     footer a { color: var(--muted); }
     footer a:hover { color: var(--green); }
+
+    /* ── Mobile collapsible TOC ── */
+    .mobile-toc { display: none; margin-bottom: 1.5rem; }
+    .mobile-toc summary {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.72rem;
+      color: var(--green-dim);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.7rem 1rem;
+      cursor: pointer;
+      list-style: none;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      user-select: none;
+    }
+    .mobile-toc summary::-webkit-details-marker { display: none; }
+    .mobile-toc summary::after { content: '  ▼'; }
+    .mobile-toc[open] summary { border-radius: 4px 4px 0 0; }
+    .mobile-toc[open] summary::after { content: '  ▲'; }
+    .mobile-toc ol {
+      list-style: none;
+      counter-reset: toc;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 4px 4px;
+      padding: 0.5rem 0 0.75rem;
+    }
+    .mobile-toc ol li { counter-increment: toc; }
+    .mobile-toc ol li a {
+      display: block;
+      padding: 0.3rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .mobile-toc ol li a:hover { color: var(--green); }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      header { padding: 1rem; gap: 0.75rem; }
+      header nav { margin-left: 0; width: 100%; font-size: 0.8rem; }
+      header nav a { margin-left: 0; margin-right: 1.2rem; }
+      .page { flex-direction: column; padding: 1rem; gap: 0; }
+      aside { display: none; }
+      .mobile-toc { display: block; }
+      table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    }
   </style>
 </head>
 <body>
@@ -207,7 +256,7 @@
   <nav>
     <a href="https://drfunn.com/dryer">← Live Demo</a>
     <a href="https://github.com/DrFunn1/Dryer">GitHub</a>
-    <a href="https://library.vcvrack.com/Dryer/Dryer">VCV Library</a>
+    <a href="https://library.vcvrack.com/DrFunn/Dryer">VCV Library</a>
   </nav>
 </header>
 
@@ -231,6 +280,25 @@
   </aside>
 
   <main>
+
+    <!-- Mobile collapsible TOC (hidden on desktop via CSS) -->
+    <details class="mobile-toc">
+      <summary>Contents</summary>
+      <ol>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#physics">Physics</a></li>
+        <li><a href="#panel">Panel</a></li>
+        <li><a href="#outputs">Outputs</a></li>
+        <li><a href="#controls">Controls</a></li>
+        <li><a href="#cv-inputs">CV Inputs</a></li>
+        <li><a href="#buttons">Buttons</a></li>
+        <li><a href="#display">Display</a></li>
+        <li><a href="#menu">Right-Click Menu</a></li>
+        <li><a href="#midi">MIDI</a></li>
+        <li><a href="#patching">Patching Ideas</a></li>
+        <li><a href="#credits">Credits</a></li>
+      </ol>
+    </details>
 
     <!-- 1. OVERVIEW -->
     <section id="overview">
