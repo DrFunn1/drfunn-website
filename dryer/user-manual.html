@@ -7,6 +7,16 @@
   <meta name="description" content="User manual for Dryer, the physics-based chaotic percussion and CV generator for VCV Rack 2 by DrFunn.">
   <link rel="canonical" href="https://drfunn.com/dryer/user-manual">
   <link rel="icon" href="../common/drfunn-favicon.png" type="image/png">
+  <meta property="og:title" content="Dryer — User Manual | DrFunn">
+  <meta property="og:description" content="Physics-based chaotic percussion and CV generator for VCV Rack 2. A ball bouncing inside a rotating drum — real physics, deterministic chaos.">
+  <meta property="og:image" content="https://drfunn.com/dryer/Dryer.png">
+  <meta property="og:url" content="https://drfunn.com/dryer/user-manual.html">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="DrFunn">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Dryer — User Manual | DrFunn">
+  <meta name="twitter:description" content="Physics-based chaotic percussion and CV generator for VCV Rack 2.">
+  <meta name="twitter:image" content="https://drfunn.com/dryer/Dryer.png">
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -26,7 +36,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Share Tech Mono', monospace;
-      font-size: 15px;
+      font-size: 17px;
       line-height: 1.7;
     }
     a { color: var(--green-dim); text-decoration: none; }
@@ -274,23 +284,8 @@
     <!-- 3. PANEL -->
     <section id="panel">
       <h2>3 · Panel Overview</h2>
-      <div class="panel-diagram">┌──────────────────────────────────────────┐  14HP
-│ ·              D R Y E R        USB/MIDI │
-│  CLK    TRG     CV     MIDI             │
-│  [ ]    [ ]    [ ]      ⊡              │  ← outputs
-│                                          │
-│[MOON]   ╭───────────────────╮   [LINT]  │
-│ moon    │                   │   lint    │
-│         │     display       │           │
-│         │     37mm ∅        │           │
-│         ╰───────────────────╯           │
-│                                          │
-│[SP]  [SZ]  [ SCATTER ]  [NUM]  [HT]   │  ← knobs
-│SPEED  SIZE  SCATTER  NUMBER  HEIGHT    │
-│ [ ]   [ ]             [ ]    [ ]      │  ← CV inputs
-│    ── DRUM ──              ── VANES ── │
-│            D R F U N N                 │
-└──────────────────────────────────────────┘</div>
+      <img src="Dryer.png" alt="Dryer VCV Rack 2 module panel — 14HP"
+           style="display:block; max-width:220px; margin:1rem auto; border-radius:6px; border:1px solid var(--border);">
       <p>
         The <strong>MIDI</strong> label and USB-B connector artwork at the top right are
         cosmetic — they represent the physical module's USB MIDI port. In VCV Rack, MIDI
@@ -306,7 +301,7 @@
         <tr>
           <td><span class="lbl">CLK</span></td>
           <td>Clock square wave</td>
-          <td>Frequency = Speed × 4 / 60&thinsp;Hz. At 15&thinsp;RPM → 1&thinsp;Hz; at 30&thinsp;RPM → 2&thinsp;Hz. Independent of collisions.</td>
+          <td>Speed (RPM) × 4 = BPM. At 15&thinsp;RPM the drum makes one revolution every 4 seconds; CLK multiplies that by 4 to give 60&thinsp;BPM (1&thinsp;Hz). At 30&thinsp;RPM → 120&thinsp;BPM (2&thinsp;Hz). To find the right knob setting: BPM ÷ 4 = RPM. Independent of collisions.</td>
         </tr>
         <tr>
           <td><span class="lbl">TRG</span></td>
@@ -404,7 +399,7 @@
     <section id="display">
       <h2>8 · Physics Display</h2>
       <p>
-        The circular display shows a real-time top-down view of the drum interior,
+        The circular display shows a real-time front view of the drum interior,
         rendered using NanoVG in VCV Rack's Darkroom-compatible layer.
       </p>
       <ul>
@@ -495,8 +490,11 @@
       <h3>Generative melodic line</h3>
       <p>CV → quantiser V/oct → oscillator. Scatter periodically (manually or via CC 7 from a sequencer) to vary the pitch mapping. Use Octave Shift to place the melody in the right register.</p>
 
-      <h3>CLK as a rhythmically related clock</h3>
-      <p>CLK outputs Speed × 4 / 60 Hz. At 15 RPM the clock is exactly 1 Hz (60 BPM quarter notes). At 30 RPM it is 2 Hz (120 BPM). Patch CLK into a clock divider to generate subdivisions tied to drum speed.</p>
+      <h3>CLK as a tempo-locked clock</h3>
+      <p>The drum at 15 RPM completes one revolution every 4 seconds. CLK multiplies the rotation rate by 4, so 15 RPM → 1 Hz → 60 BPM quarter notes. Quick formula: <strong>BPM ÷ 4 = the RPM to dial in</strong>. At 30 RPM you get 120 BPM; at 22.5 RPM, 90 BPM. Patch CLK into a clock divider or multiplier to generate subdivisions and multiples in tempo with the drum rotation.</p>
+
+      <h3>Sandbag microtrigger noise</h3>
+      <p>Select <strong>Sandbag</strong> ball type and leave <strong>LINT off</strong>. Set NUMBER to 4–6 vanes and HEIGHT to 30–40 %. As the drum turns slowly, the sandbag rolls and slides continuously along wall and vane faces, generating dense, irregular streams of low-velocity triggers — a textural percussion noise distinct from anything a sequencer produces. Try gradually dialling up HEIGHT while the sandbag is rolling up the side of a vane; the trigger density and rhythm shift dynamically as the vane geometry changes around the rolling ball.</p>
 
       <h3>Lint Trap as a dynamics gate</h3>
       <p>With many vanes and high speed, Dryer generates a continuous stream of micro-triggers. Enable LINT to gate out the quiet contact events and let only hard impacts through — instantly transforms a rolling texture into a snappy percussive hit.</p>
@@ -528,7 +526,7 @@
 
 <footer>
   <p><a href="https://drfunn.com">drfunn.com</a> &nbsp;·&nbsp; <a href="https://drfunn.com/dryer">Dryer Live Demo</a> &nbsp;·&nbsp; <a href="https://github.com/DrFunn1/Dryer">GitHub</a></p>
-  <p style="margin-top:0.4rem;">© Ed Morra / DrFunn. VCV plugin released under GPL-3.0.</p>
+  <p style="margin-top:0.4rem;">© 2026 Ed Morra / DrFunn. VCV plugin released under GPL-3.0.</p>
 </footer>
 
 </body>
