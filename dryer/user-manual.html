@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dryer — User Manual | DrFunn</title>
+  <meta name="description" content="User manual for Dryer, the physics-based chaotic percussion and CV generator for VCV Rack 2 by DrFunn.">
+  <link rel="canonical" href="https://drfunn.com/dryer/user-manual">
+  <link rel="icon" href="../common/drfunn-favicon.png" type="image/png">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0d0d0d;
+      --surface:   #141414;
+      --border:    #2a2a2a;
+      --green:     #00ff88;
+      --green-dim: #00cc55;
+      --gold:      #ffe66d;
+      --orange:    #ff9900;
+      --text:      #cccccc;
+      --muted:     #666;
+      --cyan:      #4ecdc4;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 15px;
+      line-height: 1.7;
+    }
+    a { color: var(--green-dim); text-decoration: none; }
+    a:hover { color: var(--green); }
+
+    /* ── Header ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+      display: flex;
+      align-items: baseline;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    header h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: var(--green);
+      letter-spacing: 0.1em;
+    }
+    header .sub {
+      color: var(--muted);
+      font-size: 0.85rem;
+      letter-spacing: 0.05em;
+    }
+    header nav { margin-left: auto; font-size: 0.85rem; }
+    header nav a { margin-left: 1.5rem; }
+
+    /* ── Layout ── */
+    .page { display: flex; max-width: 1100px; margin: 0 auto; padding: 2rem; gap: 2.5rem; }
+
+    /* ── Sidebar TOC ── */
+    aside {
+      flex: 0 0 200px;
+      position: sticky;
+      top: 2rem;
+      align-self: flex-start;
+    }
+    aside h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.8rem;
+    }
+    aside ol { list-style: none; counter-reset: toc; }
+    aside ol li { counter-increment: toc; }
+    aside ol li a {
+      display: block;
+      padding: 0.2rem 0;
+      color: var(--muted);
+      font-size: 0.82rem;
+      border-left: 2px solid var(--border);
+      padding-left: 0.75rem;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    aside ol li a:hover { color: var(--green); border-color: var(--green-dim); }
+
+    /* ── Main content ── */
+    main { flex: 1; min-width: 0; }
+    section { margin-bottom: 3rem; }
+    section:first-child { margin-top: 0; }
+
+    h2 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 1.1rem;
+      color: var(--green);
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+      margin-bottom: 1rem;
+    }
+    h3 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+      margin: 1.2rem 0 0.4rem;
+    }
+    p { margin-bottom: 0.8rem; }
+    ul, ol { padding-left: 1.4rem; margin-bottom: 0.8rem; }
+    li { margin-bottom: 0.3rem; }
+
+    /* ── Panel diagram ── */
+    .panel-diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1.2rem 1.5rem;
+      font-size: 0.8rem;
+      line-height: 1.5;
+      margin: 1rem 0;
+      white-space: pre;
+      overflow-x: auto;
+      color: var(--cyan);
+    }
+
+    /* ── Tables ── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+    }
+    th {
+      text-align: left;
+      color: var(--green-dim);
+      border-bottom: 1px solid var(--border);
+      padding: 0.4rem 0.6rem;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+    }
+    td { padding: 0.35rem 0.6rem; border-bottom: 1px solid #1a1a1a; }
+    tr:last-child td { border-bottom: none; }
+    td:first-child { color: var(--gold); white-space: nowrap; }
+
+    /* ── Callout boxes ── */
+    .callout {
+      background: #0f1f0f;
+      border-left: 3px solid var(--green-dim);
+      padding: 0.8rem 1rem;
+      margin: 1rem 0;
+      font-size: 0.88rem;
+    }
+    .callout.tip  { border-color: var(--cyan); background: #0a1a1f; }
+    .callout.warn { border-color: var(--orange); background: #1a1000; }
+    .callout strong { color: var(--green); }
+    .callout.tip strong { color: var(--cyan); }
+    .callout.warn strong { color: var(--orange); }
+
+    /* ── Label chips ── */
+    .lbl {
+      display: inline-block;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      padding: 0.1em 0.5em;
+      border-radius: 2px;
+      background: #1a1a1a;
+      border: 1px solid var(--border);
+      color: var(--gold);
+      vertical-align: middle;
+    }
+    .lbl.green { color: var(--green); border-color: var(--green-dim); }
+    .lbl.orange { color: var(--orange); border-color: #665500; }
+    .lbl.cyan { color: var(--cyan); border-color: #1a4a48; }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--green); }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>DRYER</h1>
+  <span class="sub">VCV Rack 2 Module · User Manual · v2.1</span>
+  <nav>
+    <a href="https://drfunn.com/dryer">← Live Demo</a>
+    <a href="https://github.com/DrFunn1/Dryer">GitHub</a>
+    <a href="https://library.vcvrack.com/Dryer/Dryer">VCV Library</a>
+  </nav>
+</header>
+
+<div class="page">
+  <aside>
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#physics">Physics</a></li>
+      <li><a href="#panel">Panel</a></li>
+      <li><a href="#outputs">Outputs</a></li>
+      <li><a href="#controls">Controls</a></li>
+      <li><a href="#cv-inputs">CV Inputs</a></li>
+      <li><a href="#buttons">Buttons</a></li>
+      <li><a href="#display">Display</a></li>
+      <li><a href="#menu">Right-Click Menu</a></li>
+      <li><a href="#midi">MIDI</a></li>
+      <li><a href="#patching">Patching Ideas</a></li>
+      <li><a href="#credits">Credits</a></li>
+    </ol>
+  </aside>
+
+  <main>
+
+    <!-- 1. OVERVIEW -->
+    <section id="overview">
+      <h2>1 · Overview</h2>
+      <p>
+        <strong>Dryer</strong> is a physics-based chaotic percussion and CV generator for
+        <a href="https://vcvrack.com">VCV Rack 2</a>. A ball tumbles inside a rotating drum
+        fitted with internal vanes. Every collision fires a trigger pulse, outputs a pitch CV,
+        and sends a MIDI note — with velocity proportional to impact speed.
+      </p>
+      <p>
+        The physics runs in the rotating reference frame of the drum at 250&thinsp;Hz,
+        applying gravity, buoyancy, centrifugal force, Coriolis deflection, and air drag.
+        The result is deterministic chaos: the same initial conditions always produce the
+        same rhythm, but small parameter changes cascade into radically different patterns.
+      </p>
+      <div class="callout">
+        <strong>Design intent:</strong> Dryer is a direct software model of a planned
+        Eurorack hardware module. Panel layout, controls, and signal flow mirror the
+        physical build. VCV Rack is both a testing ground and a creative tool in its own right.
+      </div>
+    </section>
+
+    <!-- 2. PHYSICS -->
+    <section id="physics">
+      <h2>2 · Physics Engine</h2>
+      <p>The simulation runs in the drum's rotating reference frame. At each 4&thinsp;ms step:</p>
+      <ul>
+        <li><strong>Gravity</strong> — transformed into the rotating frame via drum angle</li>
+        <li><strong>Buoyancy</strong> — Archimedes' principle; significant for the Balloon preset</li>
+        <li><strong>Centrifugal</strong> — pushes ball outward proportional to ω²·r</li>
+        <li><strong>Coriolis</strong> — deflects the ball perpendicular to its velocity in the rotating frame</li>
+        <li><strong>Air drag</strong> — quadratic drag relative to the vane-coupled air velocity field inside the drum</li>
+        <li><strong>Wall friction</strong> — regularised Coulomb friction when the ball presses against the drum wall</li>
+      </ul>
+      <p>
+        Collisions with the drum wall and each vane face are resolved with restitution and
+        a 50&thinsp;ms per-surface debounce to prevent multiple triggers from a single
+        contact event.
+      </p>
+
+      <h3>Ball Presets</h3>
+      <table>
+        <tr><th>Preset</th><th>Radius</th><th>Mass</th><th>Restitution</th><th>Character</th></tr>
+        <tr><td>Tennis Ball</td><td>35 mm</td><td>58 g</td><td>0.75</td><td>Bouncy, rapid collisions</td></tr>
+        <tr><td>Sandbag</td><td>57 mm</td><td>500 g</td><td>0.15</td><td>Heavy, rolls and slides; dense micro-triggers</td></tr>
+        <tr><td>Balloon</td><td>130 mm</td><td>12 g</td><td>0.30</td><td>Buoyant, slow, sparse triggers</td></tr>
+      </table>
+    </section>
+
+    <!-- 3. PANEL -->
+    <section id="panel">
+      <h2>3 · Panel Overview</h2>
+      <div class="panel-diagram">┌──────────────────────────────────────────┐  14HP
+│ ·              D R Y E R        USB/MIDI │
+│  CLK    TRG     CV     MIDI             │
+│  [ ]    [ ]    [ ]      ⊡              │  ← outputs
+│                                          │
+│[MOON]   ╭───────────────────╮   [LINT]  │
+│ moon    │                   │   lint    │
+│         │     display       │           │
+│         │     37mm ∅        │           │
+│         ╰───────────────────╯           │
+│                                          │
+│[SP]  [SZ]  [ SCATTER ]  [NUM]  [HT]   │  ← knobs
+│SPEED  SIZE  SCATTER  NUMBER  HEIGHT    │
+│ [ ]   [ ]             [ ]    [ ]      │  ← CV inputs
+│    ── DRUM ──              ── VANES ── │
+│            D R F U N N                 │
+└──────────────────────────────────────────┘</div>
+      <p>
+        The <strong>MIDI</strong> label and USB-B connector artwork at the top right are
+        cosmetic — they represent the physical module's USB MIDI port. In VCV Rack, MIDI
+        routing is configured via the right-click context menu.
+      </p>
+    </section>
+
+    <!-- 4. OUTPUTS -->
+    <section id="outputs">
+      <h2>4 · Outputs</h2>
+      <table>
+        <tr><th>Jack</th><th>Signal</th><th>Detail</th></tr>
+        <tr>
+          <td><span class="lbl">CLK</span></td>
+          <td>Clock square wave</td>
+          <td>Frequency = Speed × 4 / 60&thinsp;Hz. At 15&thinsp;RPM → 1&thinsp;Hz; at 30&thinsp;RPM → 2&thinsp;Hz. Independent of collisions.</td>
+        </tr>
+        <tr>
+          <td><span class="lbl">TRG</span></td>
+          <td>Trigger gate</td>
+          <td>10&thinsp;ms gate on any ball collision that passes the debounce filter. Fires for drum wall hits and both faces of each vane.</td>
+        </tr>
+        <tr>
+          <td><span class="lbl">CV</span></td>
+          <td>Pitch CV (V/oct)</td>
+          <td>Pitch of the most recent collision, quantised to the active scale. 0V = C4. Changes on each unique surface hit.</td>
+        </tr>
+      </table>
+    </section>
+
+    <!-- 5. CONTROLS -->
+    <section id="controls">
+      <h2>5 · Knob Controls</h2>
+      <table>
+        <tr><th>Knob</th><th>Range</th><th>Effect</th></tr>
+        <tr>
+          <td><span class="lbl">SPEED</span></td>
+          <td>0 – 35 RPM</td>
+          <td>Drum rotation speed. Also sets the CLK output frequency. 0 = drum stopped (ball falls under gravity only).</td>
+        </tr>
+        <tr>
+          <td><span class="lbl">SIZE</span></td>
+          <td>40 – 80 cm</td>
+          <td>Drum diameter. Larger drums allow more ball travel between collisions; smaller drums produce denser, faster rhythms.</td>
+        </tr>
+        <tr>
+          <td><span class="lbl">NUMBER</span></td>
+          <td>1 – 7 (integer)</td>
+          <td>Number of vanes. More vanes = more collision surfaces = more pitch variety and denser triggers.</td>
+        </tr>
+        <tr>
+          <td><span class="lbl">HEIGHT</span></td>
+          <td>10 – 50 %</td>
+          <td>Vane height as a fraction of drum radius. Taller vanes create more chaotic ball trajectories.</td>
+        </tr>
+      </table>
+      <div class="callout tip">
+        <strong>Tip:</strong> All four knobs snap to integer values. For more dynamic pitch
+        variety, increase NUMBER to 6–7 vanes and HEIGHT to 40–50 %. Smaller SIZE drums
+        also encourage the ball to change surfaces more frequently.
+      </div>
+    </section>
+
+    <!-- 6. CV INPUTS -->
+    <section id="cv-inputs">
+      <h2>6 · CV Inputs</h2>
+      <p>Each knob has a corresponding CV input jack below it. Signals are additive to the knob position:</p>
+      <table>
+        <tr><th>Jack</th><th>Range</th><th>Scale</th></tr>
+        <tr><td><span class="lbl cyan">SPEED cv</span></td><td>±5V</td><td>±17.5 RPM</td></tr>
+        <tr><td><span class="lbl cyan">SIZE cv</span></td><td>±5V</td><td>±20 cm</td></tr>
+        <tr><td><span class="lbl cyan">NUMBER cv</span></td><td>±5V</td><td>±3 vanes</td></tr>
+        <tr><td><span class="lbl cyan">HEIGHT cv</span></td><td>±5V</td><td>±20 %</td></tr>
+      </table>
+    </section>
+
+    <!-- 7. BUTTONS -->
+    <section id="buttons">
+      <h2>7 · Buttons</h2>
+
+      <h3>MOON — Latching toggle</h3>
+      <p>
+        Switches gravity from Earth (9.81 m/s²) to lunar (1.635 m/s² = 1/6 Earth).
+        Moon gravity produces slower, more floating trajectories and sparser collisions.
+        LED illuminates when active.
+      </p>
+
+      <h3>LINT — Latching toggle</h3>
+      <p>
+        Lint Trap. Suppresses collision events below 0.15 m/s impact speed.
+        Filters out the gentle rolling and sliding contact that occurs when the ball
+        hugs the drum wall, leaving only sharp, high-energy impacts.
+        Useful for cleaning up sparse patches or tightening rhythmic feel.
+        LED illuminates when active.
+      </p>
+
+      <h3>SCATTER — Momentary button</h3>
+      <p>
+        Reshuffles the mapping between collision surfaces and musical pitches using a
+        Fisher-Yates shuffle. The set of pitches in use does not change — only which
+        surface plays which pitch. Press once for an instant, non-repeating rearrangement.
+        The green LED flashes briefly to confirm the event fired.
+      </p>
+      <div class="callout">
+        <strong>Note:</strong> Scatter is also available via MIDI CC 7 (value ≥ 64 → fires on rising edge).
+        This allows scatter to be triggered from a DAW, sequencer, or foot pedal.
+      </div>
+    </section>
+
+    <!-- 8. DISPLAY -->
+    <section id="display">
+      <h2>8 · Physics Display</h2>
+      <p>
+        The circular display shows a real-time top-down view of the drum interior,
+        rendered using NanoVG in VCV Rack's Darkroom-compatible layer.
+      </p>
+      <ul>
+        <li><strong>Drum ring</strong> — the outer boundary; dim green</li>
+        <li><strong>Vanes</strong> — bright green radial lines; count and length track the NUMBER and HEIGHT knobs</li>
+        <li><strong>Rotation tick</strong> — a small dot on the rim showing drum angle</li>
+        <li><strong>Ball</strong> — colour indicates type: yellow (tennis), tan (sandbag), blue (balloon)</li>
+        <li><strong>Collision flash</strong> — ball brightens to white-yellow on impact; a halo glow pulses outward</li>
+      </ul>
+      <p>
+        The display runs in the GUI thread and reads physics state written by the audio thread.
+        It is Darkroom-mode compatible: the background bezel is always opaque, and all
+        illuminated elements render on layer 1.
+      </p>
+    </section>
+
+    <!-- 9. RIGHT-CLICK MENU -->
+    <section id="menu">
+      <h2>9 · Right-Click Context Menu</h2>
+
+      <h3>Ball Type</h3>
+      <p>Select the physical object tumbling in the drum. Each preset has distinct mass, radius, restitution, and drag coefficients. See the <a href="#physics">Physics</a> section for values. Setting persists in the patch.</p>
+
+      <h3>Scale</h3>
+      <p>Selects the interval pattern used to assign pitches to surfaces:</p>
+      <table>
+        <tr><th>Scale</th><th>Interval(s)</th><th>Character</th></tr>
+        <tr><td>Minor 3rds + 4ths [3,4]</td><td>3, 4 semitones (alt.)</td><td>Default; ambiguous, works in many contexts</td></tr>
+        <tr><td>Chromatic [1]</td><td>1 semitone</td><td>Dense, atonal</td></tr>
+        <tr><td>Whole Tone [2]</td><td>2 semitones</td><td>Dreamy, floating</td></tr>
+        <tr><td>Minor 3rds [3]</td><td>3 semitones</td><td>Diminished feel</td></tr>
+        <tr><td>Major 3rds [4]</td><td>4 semitones</td><td>Augmented feel</td></tr>
+        <tr><td>Tritones [6]</td><td>6 semitones</td><td>Tense, industrial</td></tr>
+        <tr><td>Fifths [7]</td><td>7 semitones</td><td>Open, modal</td></tr>
+        <tr><td>Octaves [12]</td><td>12 semitones</td><td>Percussive, single pitch class</td></tr>
+      </table>
+
+      <h3>Octave Shift</h3>
+      <p>Transposes all surface pitches by −2, −1, 0, +1, or +2 octaves. Affects both CV output and MIDI notes.</p>
+
+      <h3>MIDI Output / MIDI Input</h3>
+      <p>See the <a href="#midi">MIDI</a> section.</p>
+    </section>
+
+    <!-- 10. MIDI -->
+    <section id="midi">
+      <h2>10 · MIDI</h2>
+
+      <h3>MIDI Output</h3>
+      <p>
+        On each collision, Dryer sends a MIDI Note On (pitch from active scale, velocity
+        from impact speed × 300, clamped to 127) followed by a Note Off after
+        ~150–320 ms (velocity-scaled). Configure the driver and device via the right-click
+        menu under <em>MIDI Output</em>.
+      </p>
+      <div class="callout tip">
+        <strong>Routing to a DAW or standalone synth:</strong> Select <em>Windows MIDI</em>
+        as the driver, then choose a virtual MIDI port such as loopMIDI. Set your DAW or
+        synth to receive on the same port. For routing within VCV Rack, select the
+        <em>Loopback</em> driver, then use a MIDI-CV module on the same Loopback device.
+      </div>
+
+      <h3>MIDI Input (CC Control)</h3>
+      <p>All four knobs, both buttons, and Scatter can be driven by MIDI CC:</p>
+      <table>
+        <tr><th>CC</th><th>Target</th><th>Behaviour</th></tr>
+        <tr><td>CC 1</td><td>SPEED</td><td>0–127 → 0–35 RPM (overrides knob)</td></tr>
+        <tr><td>CC 2</td><td>SIZE</td><td>0–127 → 40–80 cm (overrides knob)</td></tr>
+        <tr><td>CC 3</td><td>NUMBER</td><td>0–127 → 1–7 vanes (overrides knob)</td></tr>
+        <tr><td>CC 4</td><td>HEIGHT</td><td>0–127 → 10–50 % (overrides knob)</td></tr>
+        <tr><td>CC 5</td><td>MOON</td><td>≥ 64 → on, &lt; 64 → off</td></tr>
+        <tr><td>CC 6</td><td>LINT</td><td>≥ 64 → on, &lt; 64 → off</td></tr>
+        <tr><td>CC 7</td><td>SCATTER</td><td>Rising edge (≥ 64 after &lt; 64) fires scatter</td></tr>
+      </table>
+      <p>CC values for SPEED, SIZE, NUMBER, and HEIGHT override the physical knob until VCV is restarted or the patch is reset. Configure the MIDI input driver and device via the right-click menu.</p>
+    </section>
+
+    <!-- 11. PATCHING IDEAS -->
+    <section id="patching">
+      <h2>11 · Patching Ideas</h2>
+
+      <h3>Basic percussion voice</h3>
+      <p>TRG → envelope attack; CV → oscillator V/oct; CLK → clock source for other modules.</p>
+
+      <h3>MIDI-driven synth (standalone target)</h3>
+      <p>MIDI Output → loopMIDI → Surge XT (or any DAW instrument). Set the synth to Poly mode with fast retrigger. Use Sandbag for dense micro-triggers; Balloon for slow, sparse notes.</p>
+
+      <h3>Generative melodic line</h3>
+      <p>CV → quantiser V/oct → oscillator. Scatter periodically (manually or via CC 7 from a sequencer) to vary the pitch mapping. Use Octave Shift to place the melody in the right register.</p>
+
+      <h3>CLK as a rhythmically related clock</h3>
+      <p>CLK outputs Speed × 4 / 60 Hz. At 15 RPM the clock is exactly 1 Hz (60 BPM quarter notes). At 30 RPM it is 2 Hz (120 BPM). Patch CLK into a clock divider to generate subdivisions tied to drum speed.</p>
+
+      <h3>Lint Trap as a dynamics gate</h3>
+      <p>With many vanes and high speed, Dryer generates a continuous stream of micro-triggers. Enable LINT to gate out the quiet contact events and let only hard impacts through — instantly transforms a rolling texture into a snappy percussive hit.</p>
+
+      <h3>Moon gravity for slow ambient textures</h3>
+      <p>MOON + Balloon + low SPEED + high HEIGHT: the ball drifts slowly, collisions are rare and gentle. Feed CV into a reverb-heavy pad for slow, unpredictable chord changes.</p>
+    </section>
+
+    <!-- 12. CREDITS -->
+    <section id="credits">
+      <h2>12 · Credits</h2>
+      <p>
+        Dryer was designed and built by <strong>Ed Morra</strong> (DrFunn).
+        Physics engine, VCV Rack plugin, panel design, and web demo are original works.
+      </p>
+      <p>
+        The VCV Rack plugin is open-source under the
+        <a href="https://github.com/DrFunn1/Dryer/blob/main/LICENSE">GPL-3.0 license</a>.
+        Source: <a href="https://github.com/DrFunn1/Dryer">github.com/DrFunn1/Dryer</a>.
+      </p>
+      <p>Built with <a href="https://vcvrack.com">VCV Rack 2</a> SDK and the rack-plugin-toolchain.</p>
+      <p style="margin-top:1.5rem; color: var(--muted); font-size:0.82rem;">
+        A hardware Eurorack version of Dryer is in development. Target debut: KnobCon 14, Chicago, September 2026.
+      </p>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p><a href="https://drfunn.com">drfunn.com</a> &nbsp;·&nbsp; <a href="https://drfunn.com/dryer">Dryer Live Demo</a> &nbsp;·&nbsp; <a href="https://github.com/DrFunn1/Dryer">GitHub</a></p>
+  <p style="margin-top:0.4rem;">© Ed Morra / DrFunn. VCV plugin released under GPL-3.0.</p>
+</footer>
+
+</body>
+</html>
